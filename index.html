@@ -93,6 +93,7 @@ select {
   background: #f9f9f9;
   color: #000;
   font-size: 17px;
+  line-height: 1.4;
   appearance: none;
   -webkit-appearance: none;
   position: relative;
@@ -207,16 +208,16 @@ input[type="checkbox"]:active::after {
 <select id="main" onchange="calc()"></select>
 </div>
 
-<!-- 加量 -->
+<!-- 加料 -->
 <div class="card">
 <label style="flex-direction:column;align-items:flex-start;">
-  <span>加量</span>
+  <span>加料</span>
   <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add-ons</span>
 </label>
 <div id="addonList" style="min-height:10px;"></div>
 <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-  <button type="button" onclick="addAddon()" style="padding:12px 16px;border:none;border-radius:14px;background:var(--subway-green-light);color:#fff;font-size:15px;cursor:pointer;">
-    + 加一個加料
+  <button type="button" onclick="addAddon()" style="padding:12px 16px;border:none;border-radius:14px;background:#34c759;color:#fff;font-size:15px;font-weight:500;cursor:pointer;">
+    + 加料
   </button>
   <span style="font-size:13px;color:#8e8e93;font-weight:400;">
     Add-on
@@ -384,7 +385,7 @@ const nameMap = {
 sortedMain.forEach(item=>{
   let en = nameMap[item.name] || ""
   const label = en ? `${item.name} ${en}` : item.name;
-  main.innerHTML += `<option>${label}</option>`;
+  main.innerHTML += `<option value="${item.name}">${label}</option>`;
 })
 
 document.getElementById("main").selectedIndex = 1
@@ -411,11 +412,11 @@ const sauceNameMap = {
 Object.keys(data.sauce).forEach(i=>{
   let en = sauceNameMap[i] || ""
   const label = en ? `${i} ${en}` : i;
-  document.getElementById("sauce1").innerHTML += `<option>${label}</option>`;
-  document.getElementById("sauce2").innerHTML += `<option>${label}</option>`;
+  document.getElementById("sauce1").innerHTML += `<option value="${i}">${label}</option>`;
+  document.getElementById("sauce2").innerHTML += `<option value="${i}">${label}</option>`;
 })
 
-document.getElementById("sauce1").value = "橄欖油 Olive Oil"
+document.getElementById("sauce1").value = "橄欖油"
 
 document.getElementById("sauce1").disabled = false
 
@@ -433,7 +434,7 @@ function createAddonSelect(){
   Object.keys(data.addon).forEach(i=>{
     let en = addonNameMap[i] || ""
     const label = en ? `${i} ${en}` : i;
-    select.innerHTML += `<option>${label}</option>`;
+    select.innerHTML += `<option value="${i}">${label}</option>`;
   })
 
   return select
@@ -444,8 +445,7 @@ function addAddon(defaultValue = ""){
   const select = createAddonSelect()
   
   if(defaultValue){
-    const en = addonNameMap[defaultValue] || ""
-    select.value = en ? `${defaultValue} ${en}` : defaultValue;
+    select.value = defaultValue;
   }
 
   container.appendChild(select)
@@ -468,8 +468,7 @@ function toggleSauce2(cb){
 function calc(){
 let total = {cal:0, protein:0}
 
-let mainRaw = document.getElementById("main").value
-let main = mainRaw.split(" ")[0]
+let main = document.getElementById("main").value
 
 if(main && data.main[main]){
   total.cal += data.main[main].cal
@@ -486,21 +485,16 @@ total.protein += data.addon[main].protein
 const addonSelects = document.querySelectorAll("#addonList select")
 
 addonSelects.forEach(sel=>{
-  let raw = sel.value
-  let name = raw.split(" ")[0]
-
+  let name = sel.value
   if(name && data.addon[name]){
     total.cal += data.addon[name].cal
     total.protein += data.addon[name].protein
   }
 })
 
-let sauce1Raw = document.getElementById("sauce1").value
+let sauce1 = document.getElementById("sauce1").value
 let sauce2Enabled = document.getElementById("sauce2Toggle").checked
-let sauce2Raw = document.getElementById("sauce2").value
-
-let sauce1 = sauce1Raw.split(" ")[0]
-let sauce2 = sauce2Raw.split(" ")[0]
+let sauce2 = document.getElementById("sauce2").value
 
 if(sauce1){
   total.cal += data.sauce[sauce1].cal / (sauce2Enabled ? 2 : 1)
