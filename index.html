@@ -168,7 +168,7 @@ select:focus-visible {
   color: #000;
   border: 1px solid #eee;
   backdrop-filter: blur(10px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
   overflow: hidden;
   margin-bottom: 10px;
   padding-bottom: calc(18px + env(safe-area-inset-bottom));
@@ -191,7 +191,7 @@ button:active {
 }
 
 .result.update {
-  transform: scale(1.02);
+  transform: none;
 }
 
 .result strong {
@@ -793,7 +793,6 @@ let lastScroll = 0
 
 window.addEventListener("scroll", () => {
   const logo = document.querySelector(".logo")
-  const result = document.querySelector(".result")
   const y = window.scrollY
 
   if(y > 20){
@@ -802,12 +801,6 @@ window.addEventListener("scroll", () => {
   } else {
     logo.style.transform = "scale(1)"
     logo.style.opacity = "1"
-  }
-
-  if (y > lastScroll && y > 50) {
-    result.style.transform = "translateY(120%)"
-  } else {
-    result.style.transform = "translateY(0)"
   }
 
   lastScroll = y
