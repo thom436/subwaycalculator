@@ -255,6 +255,17 @@ input[type="checkbox"]:active::after {
   transform: translateY(0);
 }
 
+/* Swipe hint styles */
+#swipeHint {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#addonList:not(:empty) ~ #addonEmpty #swipeHint,
+#swipeHint.show {
+  opacity: 1;
+}
+
 @media (hover: none) {
   .card:hover,
   button:hover {
@@ -527,14 +538,12 @@ function createAddonSelect(removable = true){
   let isSwiping = false;
 
   wrapper.addEventListener("touchstart", (e) => {
-    // prevent swipe interfering with select tap
-    if (e.target.tagName === "SELECT") return;
     startX = e.touches[0].clientX;
     isSwiping = true;
   });
 
   wrapper.addEventListener("touchmove", (e) => {
-    if (!isSwiping || e.target.tagName === "SELECT") return;
+    if (!isSwiping) return;
     currentX = e.touches[0].clientX;
     const diff = currentX - startX;
 
@@ -614,7 +623,8 @@ function createAddonSelect(removable = true){
     removeBtn.style.transition = "all 0.15s ease"
     removeBtn.style.opacity = "0.6"
 
-    removeBtn.onclick = () => {
+    removeBtn.onclick = (e) => {
+      e.stopPropagation();
       wrapper.remove()
       updateAddonUI()
       calc()
@@ -800,14 +810,3 @@ resultBox.addEventListener("touchend", ()=> clearTimeout(pressTimer))
 
 </body>
 </html>
-
-</style>
-#swipeHint {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-#addonList:not(:empty) ~ #addonEmpty #swipeHint,
-#swipeHint.show {
-  opacity: 1;
-}
