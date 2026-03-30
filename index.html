@@ -26,6 +26,10 @@ body {
   margin: 0;
   padding: 20px;
   color: #000;
+  padding-bottom: 90px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
 }
 
 .logo {
@@ -61,17 +65,22 @@ body {
 .card {
   background: #ffffff;
   border-radius: 20px;
-  padding: 18px;
+  padding: 20px 18px;
   margin-bottom: 20px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   border: 1px solid #eee;
   position: relative;
   z-index: 1;
   transition: 0.15s ease;
+  cursor: pointer;
+  will-change: transform;
 }
 .card:hover {
   transform: translateY(-2px);
-  transition: 0.15s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.card:active {
+  transform: scale(0.98);
 }
 
 label {
@@ -94,6 +103,7 @@ select {
   color: #000;
   font-size: 17px;
   line-height: 1.4;
+  min-height: 48px;
   appearance: none;
   -webkit-appearance: none;
   position: relative;
@@ -101,6 +111,8 @@ select {
   font-weight: 400;
   transition: all 0.15s ease;
   cursor: pointer;
+  transform-origin: center;
+  -webkit-tap-highlight-color: transparent;
 }
 select option {
   font-size: 17px;
@@ -112,17 +124,34 @@ select {
   background-size: 16px;
 }
 
-select:hover,
-button:hover {
+select:hover {
   background-color: #fff;
   border-color: var(--accent-purple);
 }
+select:active {
+  transform: scale(0.98);
+  background: #fff;
+}
 
-select:focus,
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  filter: brightness(1.05);
+}
 button:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  filter: brightness(0.95);
+}
+
+select:focus {
   outline: none;
-  border-color: var(--accent-purple);
-  box-shadow: 0 0 0 2px rgba(106,13,173,0.15);
+  border-color: #34c759;
+  box-shadow: 0 0 0 3px rgba(52,199,89,0.15);
+}
+
+select:focus-visible {
+  box-shadow: 0 0 0 2px rgba(52,199,89,0.25);
 }
 
 
@@ -132,12 +161,37 @@ button:active {
   z-index: 0;
   background: #ffffff;
   padding: 18px;
-  border-radius: 20px;
+  border-radius: 24px;
   font-size: 18px;
   font-weight: 600;
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.12);
   color: #000;
   border: 1px solid #eee;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  margin-bottom: 10px;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+}
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active {
+  transition: none;
+}
+.result::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to top, white, transparent);
+}
+
+.result.update {
+  transform: scale(1.02);
 }
 
 .result strong {
@@ -182,6 +236,33 @@ input[type="checkbox"]:checked::after {
 input[type="checkbox"]:active::after {
   transform: scale(1.05);
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#addonList select {
+  animation: fadeIn 0.2s ease;
+}
+
+#sauce2Container {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.2s ease;
+}
+#sauce2Container.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .card:hover,
+  button:hover {
+    transform: none;
+    box-shadow: none;
+    filter: none;
+  }
+}
 </style>
 </head>
 
@@ -193,7 +274,7 @@ input[type="checkbox"]:active::after {
 </h2>
 
 <!-- 主餐 -->
-<div class="card">
+<div class="card" onclick="this.querySelector('select').focus()">
 <div style="display:flex;justify-content:space-between;align-items:center;">
 <div>
   <div>6吋潛艇堡</div>
@@ -209,14 +290,15 @@ input[type="checkbox"]:active::after {
 </div>
 
 <!-- 加料 -->
-<div class="card">
+<div class="card" onclick="document.querySelector('#addonList select')?.focus()">
 <label style="flex-direction:column;align-items:flex-start;">
   <span>加料</span>
-  <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add-ons</span>
+  <span id="addonLabel" style="color:#8e8e93;font-size:13px;font-weight:400;">Add-ons (0)</span>
 </label>
 <div id="addonList" style="min-height:10px;"></div>
+<div id="addonEmpty" style="font-size:13px;color:#aeaeb2;margin-top:6px;">尚未選擇加料 · No add-ons yet</div>
 <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-  <button type="button" onclick="addAddon()" style="padding:12px 16px;border:none;border-radius:14px;background:#34c759;color:#fff;font-size:15px;font-weight:500;cursor:pointer;">
+  <button type="button" onclick="addAddon()" style="padding:12px 16px;border:none;border-radius:14px;background:#34c759;color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s ease;">
     + 加料
   </button>
   <span style="font-size:13px;color:#8e8e93;font-weight:400;">
@@ -235,8 +317,8 @@ input[type="checkbox"]:active::after {
 
 <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
   <div style="display:flex;flex-direction:column;">
-    <span>第二種醬料</span>
-    <span style="color:#8e8e93;font-size:13px;font-weight:400;">Second Sauce</span>
+    <span>加第二種醬料</span>
+    <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add second sauce</span>
   </div>
   <input type="checkbox" id="sauce2Toggle" onchange="toggleSauce2(this)">
 </div>
@@ -249,6 +331,10 @@ input[type="checkbox"]:active::after {
 <div class="result" id="result" style="visibility:hidden;"></div>
 
 <script>
+
+function haptic() {
+  if (navigator.vibrate) navigator.vibrate(8);
+}
 
 const data = {
 main:{
@@ -421,13 +507,23 @@ document.getElementById("sauce1").value = "橄欖油"
 document.getElementById("sauce1").disabled = false
 
 addAddon("英式切片起司(2片)")
+updateAddonUI()
 
 calc()
 }
 
-function createAddonSelect(){
+function createAddonSelect(removable = true){
+  const wrapper = document.createElement("div")
+  wrapper.style.display = "flex"
+  wrapper.style.alignItems = "center"
+  wrapper.style.gap = "8px"
+  wrapper.style.marginTop = "8px"
+
   const select = document.createElement("select")
-  select.onchange = calc
+  select.onchange = () => {
+    calc()
+  }
+  select.style.flex = "1"
 
   select.innerHTML = '<option value="">選擇加料</option>'
 
@@ -437,18 +533,65 @@ function createAddonSelect(){
     select.innerHTML += `<option value="${i}">${label}</option>`;
   })
 
-  return select
+  wrapper.appendChild(select)
+
+  if(removable){
+    const removeBtn = document.createElement("button")
+    removeBtn.textContent = "−"
+    removeBtn.style.border = "none"
+    removeBtn.style.background = "#e5e5ea"
+    removeBtn.style.borderRadius = "50%"
+    removeBtn.style.width = "28px"
+    removeBtn.style.height = "28px"
+    removeBtn.style.display = "flex"
+    removeBtn.style.alignItems = "center"
+    removeBtn.style.justifyContent = "center"
+    removeBtn.style.fontSize = "18px"
+    removeBtn.style.cursor = "pointer"
+    removeBtn.style.color = "#1c1c1e"
+    removeBtn.style.transition = "all 0.15s ease"
+
+    removeBtn.onmouseenter = () => {
+      removeBtn.style.background = "#d1d1d6"
+    }
+    removeBtn.onmouseleave = () => {
+      removeBtn.style.background = "#e5e5ea"
+    }
+
+    removeBtn.onclick = () => {
+      wrapper.remove()
+      updateAddonUI()
+      calc()
+    }
+
+    wrapper.appendChild(removeBtn)
+  }
+
+  return wrapper
 }
 
 function addAddon(defaultValue = ""){
+  haptic();
   const container = document.getElementById("addonList")
-  const select = createAddonSelect()
-  
-  if(defaultValue){
-    select.value = defaultValue;
+
+  const isFirst = document.querySelectorAll("#addonList select").length === 0
+  const wrapper = createAddonSelect(!isFirst)
+
+  if (defaultValue) {
+    wrapper.querySelector("select").value = defaultValue;
   }
 
-  container.appendChild(select)
+  container.appendChild(wrapper)
+  wrapper.querySelector("select").focus()
+  updateAddonUI();
+}
+
+function updateAddonUI(){
+  const count = document.querySelectorAll("#addonList select").length
+  const label = document.getElementById("addonLabel")
+  const empty = document.getElementById("addonEmpty")
+  label.textContent = `Add-ons (${count})`
+  empty.style.display = count ? "none" : "block"
 }
 
 function toggleSauce2(cb){
@@ -457,12 +600,29 @@ function toggleSauce2(cb){
 
   if(cb.checked){
     container.style.display = "block"
+    container.classList.add("show")
   } else {
-    container.style.display = "none"
+    container.classList.remove("show")
+    setTimeout(()=>{ container.style.display = "none" },200)
     select.value = ""
   }
 
   calc()
+}
+
+let lastCal = 0;
+let lastProtein = 0;
+
+function animateNumber(el, start, end, decimals=1, duration=300) {
+  let startTime = null;
+  function step(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const progress = Math.min((timestamp - startTime) / duration, 1);
+    const value = start + (end - start) * progress;
+    el.textContent = value.toFixed(decimals);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 function calc(){
@@ -506,13 +666,66 @@ if(sauce2Enabled && sauce2){
 const resultEl = document.getElementById("result")
 
 resultEl.innerHTML =
-`<div style="font-size:20px;color:#1c1c1e;font-weight:600;">🔥 ${total.cal.toFixed(1)} kcal</div>
-<div style="font-size:26px;color:#34c759;font-weight:700;margin-top:6px;">${total.protein} g protein</div>`
+`<div style="font-size:20px;color:#1c1c1e;font-weight:600;">🔥 <span id="calVal">0.0</span> kcal</div>
+<div style="font-size:26px;color:#34c759;font-weight:700;margin-top:6px;"><span id="proVal">0</span> g protein</div>`
 
+const calEl = document.getElementById("calVal")
+const proEl = document.getElementById("proVal")
+
+const calDecimals = (Math.round(total.cal * 10) % 10 === 0) ? 0 : 1
+animateNumber(calEl, lastCal, total.cal, calDecimals)
+animateNumber(proEl, lastProtein, total.protein, 0)
+
+lastCal = total.cal
+lastProtein = total.protein
+
+resultEl.classList.remove("update")
+void resultEl.offsetWidth
+resultEl.classList.add("update")
+if (navigator.vibrate) navigator.vibrate(5);
 resultEl.style.visibility = "visible"
 }
 
 init()
+
+
+let lastScroll = 0
+
+window.addEventListener("scroll", () => {
+  const logo = document.querySelector(".logo")
+  const result = document.querySelector(".result")
+  const y = window.scrollY
+
+  if(y > 20){
+    logo.style.transform = "scale(0.95)"
+    logo.style.opacity = "0.9"
+  } else {
+    logo.style.transform = "scale(1)"
+    logo.style.opacity = "1"
+  }
+
+  if (y > lastScroll && y > 50) {
+    result.style.transform = "translateY(120%)"
+  } else {
+    result.style.transform = "translateY(0)"
+  }
+
+  lastScroll = y
+})
+
+let pressTimer
+const resultBox = document.getElementById("result")
+resultBox.addEventListener("touchstart", () => {
+  pressTimer = setTimeout(()=>{
+    document.querySelectorAll("#addonList > div").forEach((el,i)=>{
+      if(i!==0) el.remove()
+    })
+    document.getElementById("sauce2Toggle").checked = false
+    toggleSauce2({checked:false})
+    calc()
+  },600)
+})
+resultBox.addEventListener("touchend", ()=> clearTimeout(pressTimer))
 
 </script>
 
