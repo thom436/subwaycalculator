@@ -539,13 +539,21 @@ function createAddonSelect(removable = true){
 
   wrapper.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
-    isSwiping = true;
+    isSwiping = false;
   });
 
   wrapper.addEventListener("touchmove", (e) => {
-    if (!isSwiping) return;
     currentX = e.touches[0].clientX;
     const diff = currentX - startX;
+
+    // activate swipe only after threshold (prevents scroll conflict)
+    if (!isSwiping && Math.abs(diff) > 10) {
+      isSwiping = true;
+    }
+
+    if (!isSwiping) return;
+
+    e.preventDefault(); // lock vertical scroll when swiping
 
     if (diff < 0) {
       wrapper.style.transform = `translateX(${diff}px)`;
@@ -554,8 +562,13 @@ function createAddonSelect(removable = true){
   });
 
   wrapper.addEventListener("touchend", (e) => {
-    if (!isSwiping) return;
     const diff = currentX - startX;
+
+    if (!isSwiping) {
+      startX = 0;
+      currentX = 0;
+      return;
+    }
 
     if (diff < -80) {
       wrapper.style.transition = "all 0.2s ease";
@@ -676,9 +689,17 @@ function toggleSauce2(cb){
 
     // auto open second sauce select
     setTimeout(() => {
-      select.focus();
-      select.click();
-    }, 50);
+      // try native picker first (modern browsers)
+      if (select.showPicker) {
+        select.showPicker();
+      } else {
+        // fallback for iOS Safari
+        select.focus();
+        setTimeout(() => {
+          select.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        }, 30);
+      }
+    }, 100);
 
   } else {
     container.classList.remove("show")
