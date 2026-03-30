@@ -112,7 +112,7 @@ select:disabled {
   <span>口味</span>
   <span style="display:flex;align-items:center;gap:8px;">
     <span style="font-size:14px;color:#666;">雙倍肉</span>
-    <input type="checkbox" id="double" class="toggle" onchange="calc()">
+    <input type="checkbox" id="double" class="toggle" onchange="calc()" checked>
   </span>
 </label>
 <select id="main" onchange="calc()"></select>
@@ -120,7 +120,10 @@ select:disabled {
 
 <!-- 加料 -->
 <div class="card">
-<label>加料</label>
+<label>
+<span>加料</span>
+<input type="checkbox" id="addonToggle" class="toggle" onchange="toggleAddon(this)" checked>
+</label>
 <select id="addon1" disabled onchange="calc()"></select>
 <select id="addon2" disabled onchange="calc()"></select>
 </div>
@@ -239,6 +242,8 @@ sortedMain.forEach(item=>{
   main.innerHTML += `<option>${item.name}（${label}）</option>`
 })
 
+document.getElementById("main").selectedIndex = 1
+
 let addon1 = document.getElementById("addon1")
 let addon2 = document.getElementById("addon2")
 
@@ -262,10 +267,20 @@ Object.keys(data.sauce).forEach(i=>{
   sauce1.innerHTML += `<option>${i}</option>`
   sauce2.innerHTML += `<option>${i}</option>`
 })
+
+document.getElementById("sauce1").value = "橄欖油"
+
 document.getElementById("sauce1").disabled = false
 document.getElementById("sauce2").disabled = true
+
+calc()
 }
 
+function toggleAddon(cb){
+  document.getElementById("addon1").disabled = !cb.checked
+  document.getElementById("addon2").disabled = !cb.checked
+  calc()
+}
 
 function toggleSauce(cb){
   const enabled = cb.checked
@@ -300,16 +315,19 @@ total.protein += data.addon[main].protein
 }
 }
 
+let addonEnabled = document.getElementById("addonToggle").checked
 let addon1 = document.getElementById("addon1").value
 let addon2 = document.getElementById("addon2").value
 
-if(addon1){
-  total.cal += data.addon[addon1].cal
-  total.protein += data.addon[addon1].protein
-}
-if(addon2){
-  total.cal += data.addon[addon2].cal
-  total.protein += data.addon[addon2].protein
+if(addonEnabled){
+  if(addon1){
+    total.cal += data.addon[addon1].cal
+    total.protein += data.addon[addon1].protein
+  }
+  if(addon2){
+    total.cal += data.addon[addon2].cal
+    total.protein += data.addon[addon2].protein
+  }
 }
 
 let sauceEnabled = document.getElementById("sauceToggle").checked
