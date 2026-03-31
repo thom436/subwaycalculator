@@ -705,11 +705,13 @@ function startAddonDrag(e, wrapper){
     delete wrapper.dataset.dragging
     document.removeEventListener("pointermove", onMove)
     document.removeEventListener("pointerup", onUp)
+    document.removeEventListener("pointercancel", onUp)
     calc()
   }
 
   document.addEventListener("pointermove", onMove, { passive:false })
   document.addEventListener("pointerup", onUp)
+  document.addEventListener("pointercancel", onUp)
 }
 
 function getSauceDisplayText(value){
