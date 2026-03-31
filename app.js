@@ -768,19 +768,7 @@ function createAddonSelect(removable = true){
     const removeBtn = document.createElement("button")
     removeBtn.textContent = "−"
     removeBtn.dataset.role = "remove-addon"
-    removeBtn.style.border = "none"
-    removeBtn.style.background = "#e5e5ea"
-    removeBtn.style.borderRadius = "50%"
-    removeBtn.style.width = "28px"
-    removeBtn.style.height = "28px"
-    removeBtn.style.display = "flex"
-    removeBtn.style.alignItems = "center"
-    removeBtn.style.justifyContent = "center"
-    removeBtn.style.fontSize = "18px"
-    removeBtn.style.cursor = "pointer"
-    removeBtn.style.color = "#1c1c1e"
-    removeBtn.style.transition = "all 0.15s ease"
-    removeBtn.style.opacity = "0.6"
+    removeBtn.className = "minus-btn"
 
     removeBtn.onclick = (e) => {
       e.stopPropagation();
@@ -836,13 +824,16 @@ function updateAddonUI(){
   const count = document.querySelectorAll("#addonList .addon-row").length
   const label = document.getElementById("addonLabel")
   const emptyPicker = document.getElementById("addonEmptyPicker")
-  const addonActions = document.getElementById("addonActions")
   label.textContent = `Add-ons (${count})`
   if(emptyPicker){
-    emptyPicker.style.display = count === 0 ? "flex" : "none"
-  }
-  if(addonActions){
-    addonActions.style.display = count === 0 ? "none" : "flex"
+    emptyPicker.style.display = "flex"
+    emptyPicker.style.marginTop = count === 0 ? "12px" : "8px"
+    emptyPicker.textContent = count === 0
+      ? "尚未選擇加料 Choose add-on"
+      : "+"
+    emptyPicker.classList.toggle("picker-field--placeholder", count === 0)
+    emptyPicker.classList.toggle("picker-field--plus", count > 0)
+    emptyPicker.classList.toggle("picker-field--reserve-minus", count > 0)
   }
 
   // show swipe hint only when there are add-ons
@@ -860,20 +851,18 @@ function getSauceDisplayText(value){
 
 function updateSauce2Visibility(){
   const sauce1Value = document.getElementById("sauce1").value
-  const section = document.getElementById("sauce2Section")
   const list = document.getElementById("sauce2List")
-  const btn = document.getElementById("sauce2Btn")
-  if(!section || !list || !btn) return
+  const emptyPicker = document.getElementById("sauce2EmptyPicker")
+  if(!list || !emptyPicker) return
 
   if(!sauce1Value){
     list.innerHTML = ""
-    section.style.display = "none"
+    emptyPicker.style.display = "none"
     return
   }
 
   const hasSecondSauceRow = list.children.length > 0
-  section.style.display = hasSecondSauceRow ? "none" : "flex"
-  btn.style.display = "inline-block"
+  emptyPicker.style.display = hasSecondSauceRow ? "none" : "flex"
 }
 
 function updateSaucePickerLabel(target = "sauce1"){
@@ -1049,15 +1038,7 @@ function createSauceSelect(){
 
   const removeBtn = document.createElement("button")
   removeBtn.textContent = "−"
-  removeBtn.style.border = "none"
-  removeBtn.style.background = "#e5e5ea"
-  removeBtn.style.borderRadius = "50%"
-  removeBtn.style.width = "28px"
-  removeBtn.style.height = "28px"
-  removeBtn.style.display = "flex"
-  removeBtn.style.alignItems = "center"
-  removeBtn.style.justifyContent = "center"
-  removeBtn.style.fontSize = "18px"
+  removeBtn.className = "minus-btn"
 
 removeBtn.onclick = (e)=>{
   e.stopPropagation()
@@ -1139,7 +1120,7 @@ function showResultStats(summaryText, breakdownHtml){
     resultEl.innerHTML =
 `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
   <div style="font-size:20px;font-weight:600;">🔥 <span id="calVal">0.0</span> kcal</div>
-  <button id="copyShareBtn" class="result-copy-btn" type="button" onclick="copyResultSummary()">複製結果</button>
+  <button id="copyShareBtn" class="result-copy-btn" type="button" aria-label="複製結果 Copy result" title="複製結果 Copy result" onclick="copyResultSummary()">⧉</button>
 </div>
 <div style="font-size:26px;color:#34c759;font-weight:700;margin-top:6px;"><span id="proVal">0</span> g protein</div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;">
@@ -1209,10 +1190,10 @@ function copyResultSummary(){
   const btn = document.getElementById("copyShareBtn")
   const setCopiedLabel = ()=>{
     if(!btn) return
-    btn.textContent = "已複製"
+    btn.textContent = "✓"
     if(copyShareResetTimer) clearTimeout(copyShareResetTimer)
     copyShareResetTimer = setTimeout(()=>{
-      btn.textContent = "複製結果"
+      btn.textContent = "⧉"
     }, 1200)
     showCopyToast("已複製")
   }
@@ -1421,8 +1402,7 @@ function resetAll(){
   updateSauce2Visibility()
   const sauce2List = document.getElementById("sauce2List")
   sauce2List.innerHTML = ""
-  const sauce2Btn = document.getElementById("sauce2Btn")
-  if(sauce2Btn) sauce2Btn.style.display = "inline-block"
+  updateSauce2Visibility()
 
   lastCal = 0
   lastProtein = 0
