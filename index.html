@@ -224,7 +224,7 @@ input[type="checkbox"]:active::after {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-#addonList select {
+#addonList .addon-row {
   animation: fadeIn 0.2s ease;
 }
 
@@ -316,7 +316,6 @@ input[type="checkbox"]:active::after {
       ontouchstart="event.stopPropagation()">
   </div>
 </div>
-<div id="mainCategories" style="display:flex;gap:8px;overflow:auto;margin-top:10px;"></div>
 <div id="mainPicker" onclick="openMainPicker()" style="margin-top:12px;padding:14px;border-radius:14px;border:1px solid #e5e5ea;background:#f9f9f9;color:#8e8e93;font-size:17px;line-height:1.4;min-height:48px;display:flex;align-items:center;cursor:pointer;">
   尚未選擇口味 · Choose flavor
 </div>
@@ -329,18 +328,18 @@ input[type="checkbox"]:active::after {
   <span>加料</span>
   <span id="addonLabel" style="color:#8e8e93;font-size:13px;font-weight:400;">Add-ons (0)</span>
 </label>
-<div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
-  <button type="button" id="addonAddBtn" onclick="openAddonPicker(addonActiveGroup)" style="padding:8px 14px;border-radius:999px;border:none;background:#34c759;color:#fff;font-size:13px;font-weight:500;">
-    + 新增加料
-  </button>
-  <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add another add-on</span>
-</div>
 <div id="addonList" style="min-height:10px;"></div>
 <div id="addonEmpty" style="font-size:13px;color:#aeaeb2;margin-top:6px;">
   尚未選擇加料 · No add-ons yet
   <div id="swipeHint" style="margin-top:4px;font-size:12px;color:#c7c7cc;">
     ← 左滑刪除 · Swipe left to delete
   </div>
+</div>
+<div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+  <button type="button" id="addonAddBtn" onclick="openAddonPicker(addonActiveGroup)" style="padding:8px 14px;border-radius:999px;border:none;background:#34c759;color:#fff;font-size:13px;font-weight:500;">
+    + 新增加料
+  </button>
+  <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add another add-on</span>
 </div>
 </div>
 
@@ -350,7 +349,10 @@ input[type="checkbox"]:active::after {
   <span>醬料</span>
   <span style="color:#8e8e93;font-size:13px;font-weight:400;">Sauce</span>
 </label>
-<select id="sauce1" onchange="calc()"></select>
+<div id="sauce1Picker" onclick="openSaucePicker('sauce1')" style="margin-top:12px;padding:14px;border-radius:14px;border:1px solid #e5e5ea;background:#f9f9f9;color:#8e8e93;font-size:17px;line-height:1.4;min-height:48px;display:flex;align-items:center;cursor:pointer;">
+  尚未選擇醬料 · Choose sauce
+</div>
+<input type="hidden" id="sauce1" value="">
 
   <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
     <button type="button" id="sauce2Btn" onclick="addSauce2()" style="padding:8px 14px;border-radius:999px;border:none;background:#34c759;color:#fff;font-size:13px;font-weight:500;">
@@ -361,13 +363,13 @@ input[type="checkbox"]:active::after {
   <div id="sauce2List" style="min-height:10px;margin-top:8px;"></div>
 </div>
 
+<div style="font-size:12px;color:#8e8e93;margin-top:6px;text-align:left;">
+  *潛艇堡包含小麥麵包、21g 生菜、3片番茄、3片大黃瓜、3根青椒、7g 洋蔥、三角切片起司。
+</div>
 <!-- Disclaimer -->
 <div style="font-size:12px;color:#8e8e93;margin-top:20px;text-align:left;">
   ⚠️ 本工具為非官方計算器，營養數據為估算值，可能因門市與製作方式有所差異
   <span onclick="toggleDisclaimer()" style="color:#34c759;cursor:pointer;margin-left:6px;">查看詳情</span>
-</div>
-<div style="font-size:12px;color:#8e8e93;margin-top:6px;text-align:left;">
-  *潛艇堡包含小麥麵包、21g 生菜、3片番茄、3片大黃瓜、3根青椒、7g 洋蔥、三角切片起司。
 </div>
 <div id="disclaimerDetail" style="display:none;font-size:11px;color:#8e8e93;line-height:1.5;margin-top:8px;">
   潛艇堡配料為固定組合，實際內容與份量依門市供應為準。<br>
@@ -476,6 +478,21 @@ const mainNameMap = {
   "辣豆瓣嫩牛":"Mala Beef",
   "雙重起司厚牛":"Double Cheese Steak",
   "墨西哥手撕豬":"Mexican Pulled Pork"
+}
+
+const sauceNameMap = {
+  "墨西哥西南醬":"Chipotle Southwest",
+  "黃芥末":"Yellow Mustard",
+  "獨家秘方義大利番茄醬":"Marinara",
+  "甜蔥醬":"Sweet Onion",
+  "蜂蜜芥末醬":"Honey Mustard",
+  "美乃滋":"Mayonnaise",
+  "橄欖油":"Olive Oil",
+  "紅酒醋":"Red Wine Vinegar",
+  "義大利油醋醬":"Italian Dressing",
+  "千島醬":"Thousand Island",
+  "鄉村醬":"Ranch",
+  "墨西哥辣椒起司醬":"Jalapeno Cheese Sauce"
 }
 
 let mainGroups = {}
@@ -604,28 +621,35 @@ const addonNameMap = {
 }
 
 const addonGroups = {
-  "蛋白質": ["鮮嫩雞柳","嫩切雞肉(3片)","香烤雞肉","照燒雞肉","厚切嫩牛","燒烤牛肉(3片/59g)","墨西哥辣牛","墨西哥手撕豬"],
-  "起司": ["切絲巧達起司","英式切片起司(2片)"],
-  "配料": ["嫩煎蛋(1片)","酪梨泥(1球)","蛋沙拉(1球)","蛋沙拉(2球)"],
+  "雞肉": ["鮮嫩雞柳","嫩切雞肉(3片)","嫩切雞肉(1片)","香烤雞肉","照燒雞肉"],
+  "牛肉": ["厚切嫩牛","燒烤牛肉(3片/59g)","燒烤牛肉(1片/19.5g)","墨西哥辣牛","辣豆瓣嫩牛","義大利牛肉丸"],
+  "豬肉冷切": ["火腿(4片)","火腿(1片)","墨西哥手撕豬","義大利經典","百味俱樂部","哈燒起司總匯","義式辣香腸(1片)","義式煙燻臘腸(1片)","培根(1條)"],
+  "起司蛋配料": ["切絲巧達起司","英式切片起司(2片)","嫩煎蛋(1片)","酪梨泥(1球)","蛋沙拉(1球)","蛋沙拉(2球)"],
+  "海鮮素食": ["鮪魚","鷹嘴豆泥餅(1顆)","鷹嘴豆泥餅(3顆)"],
   "其他": []
 }
 
 // compute "其他" as remaining items (avoid duplicates)
 const usedAddons = new Set([
-  ...addonGroups["蛋白質"],
-  ...addonGroups["起司"],
-  ...addonGroups["配料"]
+  ...addonGroups["雞肉"],
+  ...addonGroups["牛肉"],
+  ...addonGroups["豬肉冷切"],
+  ...addonGroups["起司蛋配料"],
+  ...addonGroups["海鮮素食"]
 ])
 
 addonGroups["其他"] = Object.keys(data.addon).filter(name => !usedAddons.has(name))
 
 let addonActiveGroup = Object.keys(addonGroups)[0] || ""
+let addonPickerTargetRow = null
+let addonPickerTargetHidden = null
 
 function getSelectedAddonValues(ignoreSelect = null){
   const values = []
-  document.querySelectorAll("#addonList select").forEach(sel => {
-    if(sel === ignoreSelect) return
-    if(sel.value) values.push(sel.value)
+  document.querySelectorAll("#addonList .addon-row").forEach(row => {
+    const hidden = row.querySelector('input[data-role="addon-value"]')
+    if(hidden === ignoreSelect) return
+    if(hidden && hidden.value) values.push(hidden.value)
   })
   return values
 }
@@ -635,7 +659,10 @@ function isAddonDuplicate(name, ignoreSelect = null){
   return getSelectedAddonValues(ignoreSelect).includes(name)
 }
 
-function openAddonPicker(defaultGroup = ""){
+function openAddonPicker(defaultGroup = "", targetRow = null){
+  addonPickerTargetRow = targetRow
+  addonPickerTargetHidden = targetRow ? targetRow.querySelector('input[data-role="addon-value"]') : null
+
   const modal = document.getElementById("addonModal")
   const catEl = document.getElementById("addonModalCategories")
   const itemsEl = document.getElementById("addonItems")
@@ -683,7 +710,8 @@ function openAddonPicker(defaultGroup = ""){
 function renderAddonItems(group){
   const itemsEl = document.getElementById("addonItems")
   itemsEl.innerHTML = ""
-  const selected = new Set(getSelectedAddonValues())
+  const selected = new Set(getSelectedAddonValues(addonPickerTargetHidden))
+  const editingCurrentValue = addonPickerTargetHidden ? addonPickerTargetHidden.value : ""
 
   addonGroups[group].forEach(name=>{
     if(!data.addon[name]) return;
@@ -699,22 +727,21 @@ function renderAddonItems(group){
     if(alreadySelected){
       div.style.opacity = "0.45"
       div.style.cursor = "not-allowed"
+    } else if(editingCurrentValue && name === editingCurrentValue){
+      div.style.background = "#f2fdf6"
     }
 
     div.onclick = ()=>{
       if(alreadySelected) return
+      if(addonPickerTargetRow){
+        setAddonValue(addonPickerTargetRow, name)
+        document.getElementById("addonModal").style.display = "none"
+        calc()
+        return
+      }
       const added = addAddon(name)
       if(!added) return
       document.getElementById("addonModal").style.display = "none"
-
-      const last = document.querySelector("#addonList select:last-child")
-
-      if(last){
-        setTimeout(()=>{
-          last.focus()
-          last.click()
-        }, 50)
-      }
     }
     itemsEl.appendChild(div)
   })
@@ -724,45 +751,14 @@ function init(){
 let main = document.getElementById("main")
 main.innerHTML = '<option value="">請選擇</option>'
 
-const sortedMain = Object.entries(data.main)
-  .map(([name, v]) => ({
-    name,
-    efficiency: v.protein / v.cal
-  }))
-  .sort((a, b) => b.efficiency - a.efficiency)
-
 // --- main category buttons ---
 mainGroups = {
-  "高蛋白": sortedMain.slice(0,5).map(i=>i.name),
-  "均衡": sortedMain.slice(5,10).map(i=>i.name),
-  "其他": sortedMain.slice(10).map(i=>i.name)
+  "雞肉系": ["照燒雞肉","鮮嫩雞柳","香烤雞肉","嫩切雞肉"],
+  "牛肉系": ["厚切嫩牛","燒烤牛肉","墨西哥辣牛","義大利牛肉丸"],
+  "豬肉冷切系": ["火腿","百味俱樂部","義大利經典","哈燒起司總匯","墨西哥手撕豬"],
+  "海鮮蛋素食": ["鮪魚","蛋沙拉","鷹嘴豆泥餅","素食蔬菜"]
 }
 mainActiveGroup = Object.keys(mainGroups)[0] || ""
-const catEl = document.getElementById("mainCategories")
-Object.keys(mainGroups).forEach((g,i)=>{
-  const btn = document.createElement("button")
-  btn.textContent = g
-  btn.style.padding = "6px 10px"
-  btn.style.borderRadius = "999px"
-  btn.style.border = "1px solid #ddd"
-  btn.style.background = i===0 ? "#34c759" : "#fff"
-  btn.style.color = i===0 ? "#fff" : "#000"
-  btn.style.fontSize = "13px"
-
-  btn.onclick = ()=>{
-    document.querySelectorAll("#mainCategories button").forEach(b=>{
-      b.style.background="#fff"
-      b.style.color="#000"
-    })
-    btn.style.background="#34c759"
-    btn.style.color="#fff"
-
-    mainActiveGroup = g
-    openMainPicker(g)
-  }
-
-  catEl.appendChild(btn)
-})
 
 Object.keys(data.main).forEach(name=>{
   let en = mainNameMap[name] || ""
@@ -777,30 +773,8 @@ if(firstGroup && mainGroups[firstGroup] && mainGroups[firstGroup][0]){
 updateMainPickerLabel()
 
 
-document.getElementById("sauce1").innerHTML = '<option value="">選擇醬料</option>'
-
-const sauceNameMap = {
-  "墨西哥西南醬":"Chipotle Southwest",
-  "黃芥末":"Yellow Mustard",
-  "獨家秘方義大利番茄醬":"Marinara",
-  "甜蔥醬":"Sweet Onion",
-  "蜂蜜芥末醬":"Honey Mustard",
-  "美乃滋":"Mayonnaise",
-  "橄欖油":"Olive Oil",
-  "紅酒醋":"Red Wine Vinegar",
-  "義大利油醋醬":"Italian Dressing",
-  "千島醬":"Thousand Island",
-  "鄉村醬":"Ranch",
-  "墨西哥辣椒起司醬":"Jalapeno Cheese Sauce"
-}
-
-Object.keys(data.sauce).forEach(i=>{
-  let en = sauceNameMap[i] || ""
-  const label = en ? `${i} ${en}` : i;
-  document.getElementById("sauce1").innerHTML += `<option value="${i}">${label}</option>`;
-})
-
-document.getElementById("sauce1").disabled = false
+document.getElementById("sauce1").value = ""
+updateSaucePickerLabel("sauce1")
 
 updateAddonUI()
 
@@ -817,12 +791,14 @@ function createAddonSelect(removable = true){
   let isSwiping = false;
 
   wrapper.addEventListener("touchstart", (e) => {
+    if (wrapper.dataset.dragging === "1") return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isSwiping = false;
   });
 
   wrapper.addEventListener("touchmove", (e) => {
+    if (wrapper.dataset.dragging === "1") return;
     currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
 
@@ -847,6 +823,7 @@ function createAddonSelect(removable = true){
   });
 
   wrapper.addEventListener("touchend", (e) => {
+    if (wrapper.dataset.dragging === "1") return;
     const diff = currentX - startX;
 
     if (!isSwiping) {
@@ -883,54 +860,35 @@ function createAddonSelect(removable = true){
   wrapper.style.position = "relative"
   wrapper.style.overflow = "visible"
 
-  const select = document.createElement("select")
-  // prevent card click from immediately closing select
-  select.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-  select.addEventListener("touchstart", (e) => {
-    e.stopPropagation();
-  });
-  select.dataset.prevValue = ""
-  select.onchange = () => {
-    const nextValue = select.value
-    if(nextValue && isAddonDuplicate(nextValue, select)){
-      haptic()
-      select.value = select.dataset.prevValue || ""
-      return
-    }
-    select.dataset.prevValue = select.value
-    calc()
-  }
-  select.style.flex = "1"
-  select.style.position = "relative"
-  select.style.zIndex = "1"
-
-  select.innerHTML = '<option value="">選擇加料</option>'
-
-  const groups = {
-    "肉類": ["鮮嫩雞柳","嫩切雞肉(3片)","香烤雞肉","照燒雞肉","厚切嫩牛"],
-    "其他": Object.keys(data.addon).filter(i => !["鮮嫩雞柳","嫩切雞肉(3片)","香烤雞肉","照燒雞肉","厚切嫩牛"].includes(i))
+  const display = document.createElement("div")
+  display.style.flex = "1"
+  display.style.marginTop = "12px"
+  display.style.padding = "14px"
+  display.style.borderRadius = "14px"
+  display.style.border = "1px solid #e5e5ea"
+  display.style.background = "#f9f9f9"
+  display.style.color = "#000"
+  display.style.fontSize = "17px"
+  display.style.lineHeight = "1.4"
+  display.style.minHeight = "48px"
+  display.style.fontWeight = "400"
+  display.style.position = "relative"
+  display.style.zIndex = "1"
+  display.style.display = "flex"
+  display.style.alignItems = "center"
+  display.style.cursor = "pointer"
+  display.textContent = "尚未選擇加料"
+  display.onclick = ()=>{
+    openAddonPicker(addonActiveGroup, wrapper)
   }
 
-  Object.entries(groups).forEach(([group, items])=>{
-    const optgroup = document.createElement("optgroup")
-    optgroup.label = group
+  const hiddenValue = document.createElement("input")
+  hiddenValue.type = "hidden"
+  hiddenValue.dataset.role = "addon-value"
+  hiddenValue.value = ""
 
-    items.forEach(i=>{
-      if(!data.addon[i]) return
-      let en = addonNameMap[i] || ""
-      const label = en ? `${i} ${en}` : i;
-      const option = document.createElement("option")
-      option.value = i
-      option.textContent = label
-      optgroup.appendChild(option)
-    })
-
-    select.appendChild(optgroup)
-  })
-
-  wrapper.appendChild(select)
+  wrapper.appendChild(display)
+  wrapper.appendChild(hiddenValue)
 
   if(removable){
     const controls = document.createElement("div")
@@ -938,56 +896,25 @@ function createAddonSelect(removable = true){
     controls.style.gap = "6px"
     controls.style.alignItems = "center"
 
-    const moveUpBtn = document.createElement("button")
-    moveUpBtn.textContent = "↑"
-    moveUpBtn.dataset.role = "move-up"
-    moveUpBtn.style.border = "none"
-    moveUpBtn.style.background = "#e5e5ea"
-    moveUpBtn.style.borderRadius = "50%"
-    moveUpBtn.style.width = "28px"
-    moveUpBtn.style.height = "28px"
-    moveUpBtn.style.display = "flex"
-    moveUpBtn.style.alignItems = "center"
-    moveUpBtn.style.justifyContent = "center"
-    moveUpBtn.style.fontSize = "14px"
-    moveUpBtn.style.cursor = "pointer"
-    moveUpBtn.style.color = "#1c1c1e"
-    moveUpBtn.style.transition = "all 0.15s ease"
-    moveUpBtn.style.opacity = "0.7"
-    moveUpBtn.onclick = (e) => {
-      e.stopPropagation()
-      const prev = wrapper.previousElementSibling
-      if(prev){
-        wrapper.parentNode.insertBefore(wrapper, prev)
-        refreshAddonOrderControls()
-        calc()
-      }
-    }
-
-    const moveDownBtn = document.createElement("button")
-    moveDownBtn.textContent = "↓"
-    moveDownBtn.dataset.role = "move-down"
-    moveDownBtn.style.border = "none"
-    moveDownBtn.style.background = "#e5e5ea"
-    moveDownBtn.style.borderRadius = "50%"
-    moveDownBtn.style.width = "28px"
-    moveDownBtn.style.height = "28px"
-    moveDownBtn.style.display = "flex"
-    moveDownBtn.style.alignItems = "center"
-    moveDownBtn.style.justifyContent = "center"
-    moveDownBtn.style.fontSize = "14px"
-    moveDownBtn.style.cursor = "pointer"
-    moveDownBtn.style.color = "#1c1c1e"
-    moveDownBtn.style.transition = "all 0.15s ease"
-    moveDownBtn.style.opacity = "0.7"
-    moveDownBtn.onclick = (e) => {
-      e.stopPropagation()
-      const next = wrapper.nextElementSibling
-      if(next){
-        wrapper.parentNode.insertBefore(next, wrapper)
-        refreshAddonOrderControls()
-        calc()
-      }
+    const dragBtn = document.createElement("button")
+    dragBtn.textContent = "≡"
+    dragBtn.dataset.role = "drag-addon"
+    dragBtn.style.border = "none"
+    dragBtn.style.background = "#e5e5ea"
+    dragBtn.style.borderRadius = "50%"
+    dragBtn.style.width = "28px"
+    dragBtn.style.height = "28px"
+    dragBtn.style.display = "flex"
+    dragBtn.style.alignItems = "center"
+    dragBtn.style.justifyContent = "center"
+    dragBtn.style.fontSize = "15px"
+    dragBtn.style.cursor = "grab"
+    dragBtn.style.color = "#1c1c1e"
+    dragBtn.style.transition = "all 0.15s ease"
+    dragBtn.style.opacity = "0.7"
+    dragBtn.style.touchAction = "none"
+    dragBtn.onpointerdown = (e) => {
+      startAddonDrag(e, wrapper)
     }
 
     const removeBtn = document.createElement("button")
@@ -1014,8 +941,7 @@ function createAddonSelect(removable = true){
       calc()
     }
 
-    controls.appendChild(moveUpBtn)
-    controls.appendChild(moveDownBtn)
+    controls.appendChild(dragBtn)
     controls.appendChild(removeBtn)
     wrapper.appendChild(controls)
   }
@@ -1023,37 +949,44 @@ function createAddonSelect(removable = true){
   return wrapper
 }
 
+function setAddonValue(wrapper, value){
+  const hidden = wrapper.querySelector('input[data-role="addon-value"]')
+  const display = wrapper.firstElementChild
+  if(!hidden || !display) return
+  hidden.value = value || ""
+  if(!value){
+    display.textContent = "尚未選擇加料"
+    display.style.color = "#8e8e93"
+    return
+  }
+  const en = addonNameMap[value] || ""
+  display.textContent = en ? `${value} ${en}` : value
+  display.style.color = "#000"
+}
+
 function addAddon(defaultValue = ""){
   haptic();
   const container = document.getElementById("addonList")
-  if(defaultValue && isAddonDuplicate(defaultValue)){
+  if(!defaultValue){
+    openAddonPicker(addonActiveGroup)
+    return false
+  }
+  if(isAddonDuplicate(defaultValue)){
     return false
   }
 
   // Always allow remove (first add-on is now removable)
   const wrapper = createAddonSelect(true)
-  const select = wrapper.querySelector("select")
-
-  if (defaultValue) {
-    select.value = defaultValue
-    select.dataset.prevValue = defaultValue
-  }
+  setAddonValue(wrapper, defaultValue)
 
   container.appendChild(wrapper)
-  // only auto focus when user manually adds
-  if (!defaultValue) {
-    setTimeout(()=>{
-      select.focus()
-      select.click()
-    }, 50)
-  }
   updateAddonUI()
   calc()
   return true
 }
 
 function updateAddonUI(){
-  const count = document.querySelectorAll("#addonList select").length
+  const count = document.querySelectorAll("#addonList .addon-row").length
   const label = document.getElementById("addonLabel")
   const empty = document.getElementById("addonEmpty")
   label.textContent = `Add-ons (${count})`
@@ -1064,30 +997,140 @@ function updateAddonUI(){
   if (hint) {
     hint.style.display = count ? "block" : "none"
   }
-  refreshAddonOrderControls()
 }
 
-function refreshAddonOrderControls(){
-  const rows = Array.from(document.querySelectorAll("#addonList .addon-row"))
-  rows.forEach((row, idx) => {
-    const up = row.querySelector('[data-role="move-up"]')
-    const down = row.querySelector('[data-role="move-down"]')
-    if(up){
-      up.disabled = idx === 0
-      up.style.opacity = up.disabled ? "0.35" : "0.7"
-      up.style.cursor = up.disabled ? "not-allowed" : "pointer"
+function startAddonDrag(e, wrapper){
+  if(!e || !wrapper) return
+  const container = document.getElementById("addonList")
+  if(!container) return
+
+  e.preventDefault()
+  e.stopPropagation()
+  wrapper.dataset.dragging = "1"
+  wrapper.style.opacity = "0.8"
+  wrapper.style.zIndex = "3"
+
+  const startY = e.clientY
+  let currentY = e.clientY
+
+  const onMove = (ev) => {
+    ev.preventDefault()
+    currentY = ev.clientY
+    const diffY = currentY - startY
+    wrapper.style.transform = `translateY(${diffY}px)`
+
+    const rows = Array.from(container.querySelectorAll(".addon-row")).filter(r => r !== wrapper)
+    const target = rows.find(row => {
+      const rect = row.getBoundingClientRect()
+      return currentY < rect.top + rect.height / 2
+    })
+
+    if(target){
+      container.insertBefore(wrapper, target)
+    } else {
+      container.appendChild(wrapper)
     }
-    if(down){
-      down.disabled = idx === rows.length - 1
-      down.style.opacity = down.disabled ? "0.35" : "0.7"
-      down.style.cursor = down.disabled ? "not-allowed" : "pointer"
+  }
+
+  const onUp = () => {
+    wrapper.style.transform = "none"
+    wrapper.style.opacity = "1"
+    wrapper.style.zIndex = "1"
+    delete wrapper.dataset.dragging
+    document.removeEventListener("pointermove", onMove)
+    document.removeEventListener("pointerup", onUp)
+    calc()
+  }
+
+  document.addEventListener("pointermove", onMove, { passive:false })
+  document.addEventListener("pointerup", onUp)
+}
+
+
+let saucePickerTarget = "sauce1"
+
+function getSauceDisplayText(value){
+  if(!value) return "尚未選擇醬料 · Choose sauce"
+  const en = sauceNameMap[value] || ""
+  return en ? `${value} ${en}` : value
+}
+
+function updateSaucePickerLabel(target = "sauce1"){
+  if(target === "sauce1"){
+    const picker = document.getElementById("sauce1Picker")
+    const value = document.getElementById("sauce1").value
+    if(!picker) return
+    picker.textContent = getSauceDisplayText(value)
+    picker.style.color = value ? "#000" : "#8e8e93"
+    return
+  }
+
+  const row = document.querySelector("#sauce2List .sauce-row")
+  if(!row) return
+  const hidden = row.querySelector('input[data-role="sauce-value"]')
+  const display = row.querySelector('[data-role="sauce-display"]')
+  const value = hidden ? hidden.value : ""
+  if(display){
+    display.textContent = getSauceDisplayText(value)
+    display.style.color = value ? "#000" : "#8e8e93"
+  }
+}
+
+function openSaucePicker(target = "sauce1"){
+  saucePickerTarget = target
+  const modal = document.getElementById("sauceModal")
+  const itemsEl = document.getElementById("sauceItems")
+  if(!modal || !itemsEl) return
+
+  modal.style.display = "block"
+  itemsEl.innerHTML = ""
+
+  const sauce1Value = document.getElementById("sauce1").value
+  const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
+  const sauce2Value = sauce2ValueInput ? sauce2ValueInput.value : ""
+  const selectedValue = target === "sauce1" ? sauce1Value : sauce2Value
+  const blockedValue = target === "sauce2" ? sauce1Value : ""
+
+  Object.keys(data.sauce).forEach(name=>{
+    const div = document.createElement("div")
+    div.style.padding = "12px"
+    div.style.borderBottom = "1px solid #eee"
+    div.style.cursor = "pointer"
+    const en = sauceNameMap[name] || ""
+    div.textContent = en ? `${name} ${en}` : name
+
+    if(name === blockedValue){
+      div.style.opacity = "0.45"
+      div.style.cursor = "not-allowed"
+    } else if(name === selectedValue){
+      div.style.background = "#f2fdf6"
     }
+
+    div.onclick = ()=>{
+      if(name === blockedValue) return
+      if(target === "sauce1"){
+        document.getElementById("sauce1").value = name
+      } else {
+        const row = document.querySelector("#sauce2List .sauce-row")
+        const hidden = row ? row.querySelector('input[data-role="sauce-value"]') : null
+        if(hidden) hidden.value = name
+      }
+      updateSaucePickerLabel(target)
+      modal.style.display = "none"
+      calc()
+    }
+
+    itemsEl.appendChild(div)
   })
-}
 
+  modal.onclick = (e)=>{
+    if(e.target.id === "sauceModal") modal.style.display = "none"
+  }
+}
 
 function createSauceSelect(){
   const wrapper = document.createElement("div")
+  wrapper.className = "sauce-row"
 
   let startX = 0, startY = 0, currentX = 0, isSwiping = false;
 
@@ -1150,18 +1193,29 @@ function createSauceSelect(){
   wrapper.style.gap = "8px"
   wrapper.style.marginTop = "8px"
 
-  const select = document.createElement("select")
-  select.style.flex = "1"
-  select.innerHTML = '<option value="">選擇醬料</option>'
+  const display = document.createElement("div")
+  display.dataset.role = "sauce-display"
+  display.style.flex = "1"
+  display.style.padding = "14px"
+  display.style.borderRadius = "14px"
+  display.style.border = "1px solid #e5e5ea"
+  display.style.background = "#f9f9f9"
+  display.style.color = "#8e8e93"
+  display.style.fontSize = "17px"
+  display.style.lineHeight = "1.4"
+  display.style.minHeight = "48px"
+  display.style.display = "flex"
+  display.style.alignItems = "center"
+  display.style.cursor = "pointer"
+  display.textContent = "尚未選擇醬料 · Choose sauce"
+  display.onclick = ()=>{
+    openSaucePicker("sauce2")
+  }
 
-  Object.keys(data.sauce).forEach(i=>{
-    const option = document.createElement("option")
-    option.value = i
-    option.textContent = i
-    select.appendChild(option)
-  })
-
-  select.onchange = calc
+  const hiddenValue = document.createElement("input")
+  hiddenValue.type = "hidden"
+  hiddenValue.dataset.role = "sauce-value"
+  hiddenValue.value = ""
 
   const removeBtn = document.createElement("button")
   removeBtn.textContent = "−"
@@ -1186,7 +1240,8 @@ removeBtn.onclick = (e)=>{
   calc()
 }
 
-  wrapper.appendChild(select)
+  wrapper.appendChild(display)
+  wrapper.appendChild(hiddenValue)
   wrapper.appendChild(removeBtn)
 
   return wrapper
@@ -1203,14 +1258,7 @@ function addSauce2(){
   const btn = document.getElementById("sauce2Btn")
   if(btn) btn.style.display = "none"
 
-  const select = item.querySelector("select")
-
-  if(select){
-    setTimeout(()=>{
-      select.focus()
-      select.click()   // 🔥 這行才是關鍵
-    }, 50)
-  }
+  openSaucePicker("sauce2")
 }
 
 let lastCal = 0;
@@ -1275,11 +1323,12 @@ if(document.getElementById("double").checked && main){
   }
 }
 
-const addonSelects = document.querySelectorAll("#addonList select")
+const addonRows = document.querySelectorAll("#addonList .addon-row")
 const selectedAddonNames = []
 
-addonSelects.forEach(sel=>{
-  let name = sel.value
+addonRows.forEach(row=>{
+  const hidden = row.querySelector('input[data-role="addon-value"]')
+  let name = hidden ? hidden.value : ""
   if(name && data.addon[name]){
     selectedAddonNames.push(name)
     total.cal += data.addon[name].cal
@@ -1289,9 +1338,9 @@ addonSelects.forEach(sel=>{
 })
 
 let sauce1 = document.getElementById("sauce1").value
-const sauce2Select = document.querySelector("#sauce2List select")
-let sauce2 = sauce2Select ? sauce2Select.value : ""
-const sauce2Visible = !!sauce2Select
+const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
+let sauce2 = sauce2ValueInput ? sauce2ValueInput.value : ""
+const sauce2Visible = !!sauce2ValueInput
 
 if(sauce1 && sauce2Visible && sauce2){
   // both sauces → each half
@@ -1387,18 +1436,13 @@ function resetAll(){
   }
   updateMainPickerLabel()
 
-  const mainButtons = document.querySelectorAll("#mainCategories button")
-  mainButtons.forEach((btn, idx) => {
-    btn.style.background = idx === 0 ? "#34c759" : "#fff"
-    btn.style.color = idx === 0 ? "#fff" : "#000"
-  })
-
   document.getElementById("double").checked = false
   document.getElementById("addonList").innerHTML = ""
   addonActiveGroup = Object.keys(addonGroups)[0] || ""
 
   const sauce1 = document.getElementById("sauce1")
   sauce1.value = ""
+  updateSaucePickerLabel("sauce1")
   const sauce2List = document.getElementById("sauce2List")
   sauce2List.innerHTML = ""
   const sauce2Btn = document.getElementById("sauce2Btn")
@@ -1410,8 +1454,10 @@ function resetAll(){
 
   const addonModal = document.getElementById("addonModal")
   const mainModal = document.getElementById("mainModal")
+  const sauceModal = document.getElementById("sauceModal")
   if(addonModal) addonModal.style.display = "none"
   if(mainModal) mainModal.style.display = "none"
+  if(sauceModal) sauceModal.style.display = "none"
 
   updateAddonUI()
   calc()
@@ -1433,6 +1479,12 @@ function resetAll(){
       <div id="mainModalCategories" style="display:flex;gap:8px;overflow:auto;"></div>
     </div>
     <div id="mainItems" style="flex:1;overflow:auto;"></div>
+  </div>
+</div>
+<div id="sauceModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;z-index:10000;">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top-left-radius:20px;border-top-right-radius:20px;padding:16px;height:70vh;display:flex;flex-direction:column;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px;">選擇醬料</div>
+    <div id="sauceItems" style="flex:1;overflow:auto;"></div>
   </div>
 </div>
 </body>
