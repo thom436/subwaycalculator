@@ -278,7 +278,9 @@ function closeSwipeRow(row){
   if(!row) return
   row.classList.remove("swiped")
   const picker = row.querySelector(".picker-field")
+  const minusBtn = row.querySelector(".minus-btn")
   if(picker) picker.style.transform = ""
+  if(minusBtn) minusBtn.style.opacity = ""
 }
 
 function removeRowWithAnimation(row, onDone){
@@ -363,9 +365,14 @@ function attachSwipeToReveal(row, onSwipeDelete){
       if(typeof onSwipeDelete === "function"){
         onSwipeDelete()
       }
+      setTimeout(()=> closeSwipeRow(row), 0)
     } else {
       closeSwipeRow(row)
     }
+  })
+
+  row.addEventListener("touchcancel", ()=>{
+    closeSwipeRow(row)
   })
 }
 
