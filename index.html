@@ -24,7 +24,7 @@ body {
   margin: 0;
   padding: 20px;
   color: #000;
-  padding-bottom: 140px;
+  padding-bottom: calc(180px + env(safe-area-inset-bottom));
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
   overscroll-behavior-y: contain;
@@ -70,14 +70,6 @@ body {
   position: relative;
   z-index: 0;
   transition: 0.15s ease;
-  cursor: pointer;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-}
-.card:active {
-  transform: scale(0.98);
 }
 
 label {
@@ -86,7 +78,6 @@ label {
   margin-bottom: 6px;
   color: #1c1c1e;
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 
@@ -121,32 +112,27 @@ select option {
 
 select:hover {
   background-color: #fff;
-  border-color: var(--accent-purple);
+  border-color: #d1d1d6;
 }
 select:active {
-  transform: scale(0.98);
   background: #fff;
 }
 
 button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   filter: brightness(1.05);
 }
 button:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   filter: brightness(0.95);
 }
 
 select:focus {
   outline: none;
   border-color: #34c759;
-  box-shadow: 0 0 0 3px rgba(52,199,89,0.15);
+  box-shadow: 0 0 0 2px rgba(52,199,89,0.2);
 }
 
 select:focus-visible {
-  box-shadow: 0 0 0 2px rgba(52,199,89,0.25);
+  box-shadow: 0 0 0 2px rgba(52,199,89,0.2);
 }
 
 
@@ -169,12 +155,13 @@ select:focus-visible {
   overflow: hidden;
   margin-bottom: 10px;
   padding-bottom: calc(18px + env(safe-area-inset-bottom));
-  transform: scale(0.95);
-  opacity: 0.9;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, box-shadow 0.2s ease;
 }
 
 .result.active {
-  transform: scale(1);
+  transform: none;
   opacity: 1;
 }
 button {
@@ -314,15 +301,15 @@ input[type="checkbox"]:active::after {
 <div>
   <div>6吋潛艇堡</div>
   <div style="color:#8e8e93;font-size:13px;font-weight:400;">6" Sandwich</div>
-  <div style="color:#aeaeb2;font-size:12px;font-weight:400;">Protein efficiency first</div>
 </div>
   <div style="display:flex;align-items:center;gap:8px;">
     <span style="font-size:14px;color:#666;">雙份肉</span>
-    <input type="checkbox" id="double" onchange="calc()" checked
+    <input type="checkbox" id="double" onchange="calc()"
       onclick="event.stopPropagation()"
       ontouchstart="event.stopPropagation()">
   </div>
 </div>
+<div id="mainCategories" style="display:flex;gap:8px;overflow:auto;margin-top:10px;"></div>
 <select id="main" onchange="calc()"></select>
 </div>
 
@@ -332,20 +319,13 @@ input[type="checkbox"]:active::after {
   <span>加料</span>
   <span id="addonLabel" style="color:#8e8e93;font-size:13px;font-weight:400;">Add-ons (0)</span>
 </label>
+<div id="addonCategories" style="display:flex;gap:8px;overflow:auto;margin-top:10px;flex-wrap:wrap;"></div>
 <div id="addonList" style="min-height:10px;"></div>
 <div id="addonEmpty" style="font-size:13px;color:#aeaeb2;margin-top:6px;">
   尚未選擇加料 · No add-ons yet
   <div id="swipeHint" style="margin-top:4px;font-size:12px;color:#c7c7cc;">
     ← 左滑刪除 · Swipe left to delete
   </div>
-</div>
-<div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-  <button type="button" onclick="addAddon()" style="padding:12px 16px;border:none;border-radius:14px;background:#34c759;color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s ease;">
-    + 加料
-  </button>
-  <span style="font-size:13px;color:#8e8e93;font-weight:400;">
-    Add-on
-  </span>
 </div>
 </div>
 
@@ -355,22 +335,22 @@ input[type="checkbox"]:active::after {
   <span>醬料</span>
   <span style="color:#8e8e93;font-size:13px;font-weight:400;">Sauce</span>
 </label>
-<select id="sauce1" disabled onchange="calc()"></select>
+<select id="sauce1" onchange="calc()"></select>
 
-<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">
-  <div style="display:flex;flex-direction:column;">
-    <span>加第二種醬料</span>
+  <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+    <button type="button" id="sauce2Btn" onclick="addSauce2()" style="padding:8px 14px;border-radius:999px;border:none;background:#34c759;color:#fff;font-size:13px;font-weight:500;">
+      + 第二種醬料
+    </button>
     <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add second sauce</span>
   </div>
-  <input type="checkbox" id="sauce2Toggle" onchange="toggleSauce2(this)">
-</div>
-<div id="sauce2Container" style="display:none;">
-  <select id="sauce2" onchange="calc()"></select>
-</div>
+  <div id="sauce2List" style="min-height:10px;margin-top:8px;"></div>
 </div>
 
+<!-- spacer to prevent overlap -->
+<div style="height:180px;"></div>
+
 <!-- 結果 -->
-<div class="result" id="result" style="visibility:hidden;"></div>
+<div class="result" id="result"></div>
 
 <script>
 
@@ -477,6 +457,92 @@ const addonNameMap = {
   "墨西哥手撕豬":"Mexican Pulled Pork"
 }
 
+const addonGroups = {
+  "蛋白質": ["鮮嫩雞柳","嫩切雞肉(3片)","香烤雞肉","照燒雞肉","厚切嫩牛","燒烤牛肉(3片/59g)","墨西哥辣牛","墨西哥手撕豬"],
+  "起司": ["切絲巧達起司","英式切片起司(2片)"],
+  "配料": ["嫩煎蛋(1片)","酪梨泥(1球)","蛋沙拉(1球)","蛋沙拉(2球)"],
+  "其他": []
+}
+
+// compute "其他" as remaining items (avoid duplicates)
+const usedAddons = new Set([
+  ...addonGroups["蛋白質"],
+  ...addonGroups["起司"],
+  ...addonGroups["配料"]
+])
+
+addonGroups["其他"] = Object.keys(data.addon).filter(name => !usedAddons.has(name))
+
+function openAddonPicker(){
+  const modal = document.getElementById("addonModal")
+  const catEl = document.getElementById("addonModalCategories")
+  const itemsEl = document.getElementById("addonItems")
+
+  modal.style.display = "block"
+  catEl.innerHTML = ""
+  itemsEl.innerHTML = ""
+
+  Object.keys(addonGroups).forEach((g,i)=>{
+    const btn = document.createElement("button")
+    btn.textContent = g
+    btn.style.padding = "8px 12px"
+    btn.style.borderRadius = "999px"
+    btn.style.border = "1px solid #ddd"
+    btn.style.background = i===0 ? "#34c759" : "#fff"
+    btn.style.color = i===0 ? "#fff" : "#000"
+
+    btn.onclick = ()=>{
+      document.querySelectorAll("#addonModalCategories button").forEach(b=>{
+        b.style.background="#fff"
+        b.style.color="#000"
+      })
+      btn.style.background="#34c759"
+      btn.style.color="#fff"
+      renderAddonItems(g)
+    }
+
+    catEl.appendChild(btn)
+  })
+
+  renderAddonItems(Object.keys(addonGroups)[0])
+
+  modal.onclick = (e)=>{
+    if(e.target.id==="addonModal") modal.style.display="none"
+  }
+}
+
+function renderAddonItems(group){
+  const itemsEl = document.getElementById("addonItems")
+  itemsEl.innerHTML = ""
+
+  addonGroups[group].forEach(name=>{
+    if(!data.addon[name]) return;
+
+    const div = document.createElement("div")
+    div.style.padding = "12px"
+    div.style.borderBottom = "1px solid #eee"
+    div.style.cursor = "pointer"
+
+    const en = addonNameMap[name] || ""
+    div.textContent = en ? `${name} ${en}` : name
+
+    div.onclick = ()=>{
+      addAddon(name)
+      document.getElementById("addonModal").style.display="none"
+
+      const last = document.querySelector("#addonList select:last-child")
+
+      if(last){
+        setTimeout(()=>{
+          last.focus()
+          last.click()
+        }, 50)
+      }
+    }
+    itemsEl.appendChild(div)
+  })
+}
+
 function init(){
 let main = document.getElementById("main")
 main.innerHTML = '<option value="">請選擇</option>'
@@ -510,17 +576,59 @@ const nameMap = {
   "墨西哥手撕豬":"Mexican Pulled Pork"
 }
 
-sortedMain.forEach(item=>{
-  let en = nameMap[item.name] || ""
-  const label = en ? `${item.name} ${en}` : item.name;
-  main.innerHTML += `<option value="${item.name}">${label}</option>`;
+// --- main category buttons ---
+const mainGroups = {
+  "高蛋白": sortedMain.slice(0,5).map(i=>i.name),
+  "均衡": sortedMain.slice(5,10).map(i=>i.name),
+  "其他": sortedMain.slice(10).map(i=>i.name)
+}
+const catEl = document.getElementById("mainCategories")
+Object.keys(mainGroups).forEach((g,i)=>{
+  const btn = document.createElement("button")
+  btn.textContent = g
+  btn.style.padding = "6px 10px"
+  btn.style.borderRadius = "999px"
+  btn.style.border = "1px solid #ddd"
+  btn.style.background = i===0 ? "#34c759" : "#fff"
+  btn.style.color = i===0 ? "#fff" : "#000"
+  btn.style.fontSize = "13px"
+
+  btn.onclick = ()=>{
+    document.querySelectorAll("#mainCategories button").forEach(b=>{
+      b.style.background="#fff"
+      b.style.color="#000"
+    })
+    btn.style.background="#34c759"
+    btn.style.color="#fff"
+
+    main.innerHTML = '<option value="">請選擇</option>'
+    mainGroups[g].forEach(name=>{
+      let en = nameMap[name] || ""
+      const label = en ? `${name} ${en}` : name;
+      main.innerHTML += `<option value="${name}">${label}</option>`;
+    })
+
+    // 🔥 auto open dropdown
+    setTimeout(()=>{
+      main.focus()
+      main.click()
+    }, 50)
+  }
+
+  catEl.appendChild(btn)
+})
+// initialize with first category
+main.innerHTML = '<option value="">請選擇</option>'
+mainGroups[Object.keys(mainGroups)[0]].forEach(name=>{
+  let en = nameMap[name] || ""
+  const label = en ? `${name} ${en}` : name;
+  main.innerHTML += `<option value="${name}">${label}</option>`;
 })
 
 document.getElementById("main").selectedIndex = 1
 
 
 document.getElementById("sauce1").innerHTML = '<option value="">選擇醬料</option>'
-document.getElementById("sauce2").innerHTML = '<option value="">選擇醬料</option>'
 
 const sauceNameMap = {
   "墨西哥西南醬":"Chipotle Southwest",
@@ -541,14 +649,40 @@ Object.keys(data.sauce).forEach(i=>{
   let en = sauceNameMap[i] || ""
   const label = en ? `${i} ${en}` : i;
   document.getElementById("sauce1").innerHTML += `<option value="${i}">${label}</option>`;
-  document.getElementById("sauce2").innerHTML += `<option value="${i}">${label}</option>`;
 })
 
 document.getElementById("sauce1").value = "橄欖油"
 
 document.getElementById("sauce1").disabled = false
 
-addAddon("英式切片起司(2片)")
+// --- Add-on category buttons ---
+const addonCatEl = document.getElementById("addonCategories")
+addonCatEl.innerHTML = "";
+Object.keys(addonGroups).forEach((g,i)=>{
+  const btn = document.createElement("button")
+  btn.textContent = g
+  btn.style.padding = "6px 10px"
+  btn.style.borderRadius = "999px"
+  btn.style.border = "1px solid #ddd"
+  btn.style.background = i===0 ? "#34c759" : "#fff"
+  btn.style.color = i===0 ? "#fff" : "#000"
+  btn.style.fontSize = "13px"
+
+  btn.onclick = ()=>{
+    document.querySelectorAll("#addonCategories button").forEach(b=>{
+      b.style.background="#fff"
+      b.style.color="#000"
+    })
+    btn.style.background="#34c759"
+    btn.style.color="#fff"
+
+    openAddonPicker()
+    renderAddonItems(g)
+  }
+
+  addonCatEl.appendChild(btn)
+})
+
 updateAddonUI()
 
 calc()
@@ -646,10 +780,26 @@ function createAddonSelect(removable = true){
 
   select.innerHTML = '<option value="">選擇加料</option>'
 
-  Object.keys(data.addon).forEach(i=>{
-    let en = addonNameMap[i] || ""
-    const label = en ? `${i} ${en}` : i;
-    select.innerHTML += `<option value="${i}">${label}</option>`;
+  const groups = {
+    "肉類": ["鮮嫩雞柳","嫩切雞肉(3片)","香烤雞肉","照燒雞肉","厚切嫩牛"],
+    "其他": Object.keys(data.addon)
+  }
+
+  Object.entries(groups).forEach(([group, items])=>{
+    const optgroup = document.createElement("optgroup")
+    optgroup.label = group
+
+    items.forEach(i=>{
+      if(!data.addon[i]) return
+      let en = addonNameMap[i] || ""
+      const label = en ? `${i} ${en}` : i;
+      const option = document.createElement("option")
+      option.value = i
+      option.textContent = label
+      optgroup.appendChild(option)
+    })
+
+    select.appendChild(optgroup)
   })
 
   wrapper.appendChild(select)
@@ -688,8 +838,8 @@ function addAddon(defaultValue = ""){
   haptic();
   const container = document.getElementById("addonList")
 
-  const isFirst = document.querySelectorAll("#addonList select").length === 0
-  const wrapper = createAddonSelect(!isFirst)
+  // Always allow remove (first add-on is now removable)
+  const wrapper = createAddonSelect(true)
 
   if (defaultValue) {
     wrapper.querySelector("select").value = defaultValue;
@@ -698,7 +848,11 @@ function addAddon(defaultValue = ""){
   container.appendChild(wrapper)
   // only auto focus when user manually adds
   if (!defaultValue) {
-    wrapper.querySelector("select").focus()
+    const select = wrapper.querySelector("select")
+    setTimeout(()=>{
+      select.focus()
+      select.click()
+    }, 50)
   }
   updateAddonUI();
 }
@@ -717,35 +871,132 @@ function updateAddonUI(){
   }
 }
 
-function toggleSauce2(cb){
-  const container = document.getElementById("sauce2Container")
-  const select = document.getElementById("sauce2")
 
-  if(cb.checked){
-    container.style.display = "block"
-    container.classList.add("show")
+function createSauceSelect(){
+  const wrapper = document.createElement("div")
 
-    // auto open second sauce select
-    setTimeout(() => {
-      // try native picker first (modern browsers)
-      if (select.showPicker) {
-        select.showPicker();
-      } else {
-        // fallback for iOS Safari
-        select.focus();
-        setTimeout(() => {
-          select.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-        }, 30);
-      }
-    }, 100);
+  let startX = 0, startY = 0, currentX = 0, isSwiping = false;
 
-  } else {
-    container.classList.remove("show")
-    setTimeout(()=>{ container.style.display = "none" },200)
-    select.value = ""
-  }
+  wrapper.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwiping = false;
+  });
+
+  wrapper.addEventListener("touchmove", (e) => {
+    currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - startX;
+    const diffY = currentY - startY;
+
+    if (!isSwiping) {
+      if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+        isSwiping = true;
+      } else return;
+    }
+
+    e.preventDefault();
+
+    if (diffX < 0) {
+      wrapper.style.transform = `translateX(${diffX}px)`;
+      wrapper.style.opacity = Math.max(0.5, 1 + diffX / 200);
+    }
+  });
+
+  wrapper.addEventListener("touchend", () => {
+    const diff = currentX - startX;
+
+    if (isSwiping && diff < -80) {
+      wrapper.style.transition = "all 0.2s ease";
+      wrapper.style.transform = "translateX(-120%)";
+      wrapper.style.opacity = "0";
+
+      setTimeout(() => {
+        wrapper.remove();
+
+        // restore button after swipe delete
+        const btn = document.getElementById("sauce2Btn")
+        if(btn) btn.style.display = "inline-block"
+
+        calc();
+      }, 200);
+    } else {
+      wrapper.style.transition = "all 0.2s ease";
+      wrapper.style.transform = "translateX(0)";
+      wrapper.style.opacity = "1";
+    }
+
+    isSwiping = false;
+    startX = 0;
+    currentX = 0;
+  });
+
+  wrapper.style.display = "flex"
+  wrapper.style.alignItems = "center"
+  wrapper.style.gap = "8px"
+  wrapper.style.marginTop = "8px"
+
+  const select = document.createElement("select")
+  select.style.flex = "1"
+  select.innerHTML = '<option value="">選擇醬料</option>'
+
+  Object.keys(data.sauce).forEach(i=>{
+    const option = document.createElement("option")
+    option.value = i
+    option.textContent = i
+    select.appendChild(option)
+  })
+
+  select.onchange = calc
+
+  const removeBtn = document.createElement("button")
+  removeBtn.textContent = "−"
+  removeBtn.style.border = "none"
+  removeBtn.style.background = "#e5e5ea"
+  removeBtn.style.borderRadius = "50%"
+  removeBtn.style.width = "28px"
+  removeBtn.style.height = "28px"
+  removeBtn.style.display = "flex"
+  removeBtn.style.alignItems = "center"
+  removeBtn.style.justifyContent = "center"
+  removeBtn.style.fontSize = "18px"
+
+removeBtn.onclick = (e)=>{
+  e.stopPropagation()
+  wrapper.remove()
+
+  // 🔥 顯示按鈕
+  const btn = document.getElementById("sauce2Btn")
+  if(btn) btn.style.display = "inline-block"
 
   calc()
+}
+
+  wrapper.appendChild(select)
+  wrapper.appendChild(removeBtn)
+
+  return wrapper
+}
+
+function addSauce2(){
+  const container = document.getElementById("sauce2List")
+  if(container.children.length > 0) return
+
+  const item = createSauceSelect()
+  container.appendChild(item)
+
+  // 🔥 隱藏按鈕
+  const btn = document.getElementById("sauce2Btn")
+  if(btn) btn.style.display = "none"
+
+  const select = item.querySelector("select")
+
+  if(select){
+    setTimeout(()=>{
+      select.focus()
+      select.click()   // 🔥 這行才是關鍵
+    }, 50)
+  }
 }
 
 let lastCal = 0;
@@ -765,19 +1016,22 @@ function animateNumber(el, start, end, decimals=1, duration=300) {
 
 function calc(){
 let total = {cal:0, protein:0}
+let breakdown = []
 
 let main = document.getElementById("main").value
 
 if(main && data.main[main]){
   total.cal += data.main[main].cal
   total.protein += data.main[main].protein
+  breakdown.push(`${main}: ${data.main[main].cal} kcal`)
 }
 
 if(document.getElementById("double").checked && main){
-if(data.addon[main]){
-total.cal += data.addon[main].cal
-total.protein += data.addon[main].protein
-}
+  if(data.addon[main]){
+    total.cal += data.addon[main].cal
+    total.protein += data.addon[main].protein
+    breakdown.push(`雙份肉 ${main}: ${data.addon[main].cal} kcal`)
+  }
 }
 
 const addonSelects = document.querySelectorAll("#addonList select")
@@ -787,25 +1041,34 @@ addonSelects.forEach(sel=>{
   if(name && data.addon[name]){
     total.cal += data.addon[name].cal
     total.protein += data.addon[name].protein
+    breakdown.push(`${name}: ${data.addon[name].cal} kcal`)
   }
 })
 
 let sauce1 = document.getElementById("sauce1").value
-let sauce2Enabled = document.getElementById("sauce2Toggle").checked
-let sauce2 = document.getElementById("sauce2").value
+const sauce2Select = document.querySelector("#sauce2List select")
+let sauce2 = sauce2Select ? sauce2Select.value : ""
+const sauce2Visible = !!sauce2Select
 
-if(sauce1){
-  total.cal += data.sauce[sauce1].cal / (sauce2Enabled ? 2 : 1)
-}
-if(sauce2Enabled && sauce2){
+if(sauce1 && sauce2Visible && sauce2){
+  // both sauces → each half
+  total.cal += data.sauce[sauce1].cal / 2
   total.cal += data.sauce[sauce2].cal / 2
+  breakdown.push(`${sauce1}: ${data.sauce[sauce1].cal / 2} kcal`)
+  breakdown.push(`${sauce2}: ${data.sauce[sauce2].cal / 2} kcal`)
+} else if(sauce1){
+  total.cal += data.sauce[sauce1].cal
+  breakdown.push(`${sauce1}: ${data.sauce[sauce1].cal} kcal`)
 }
 
 const resultEl = document.getElementById("result")
 
 resultEl.innerHTML =
-`<div style="font-size:20px;color:inherit;font-weight:600;">🔥 <span id="calVal">0.0</span> kcal</div>
-<div style="font-size:26px;color:#34c759;font-weight:700;margin-top:6px;"><span id="proVal">0</span> g protein</div>`
+`<div style="font-size:20px;font-weight:600;">🔥 <span id="calVal">0.0</span> kcal</div>
+<div style="font-size:26px;color:#34c759;font-weight:700;margin-top:6px;"><span id="proVal">0</span> g protein</div>
+<div style="margin-top:10px;font-size:13px;color:#8e8e93;line-height:1.5;">
+${breakdown.join("<br>")}
+</div>`
 
 const calEl = document.getElementById("calVal")
 const proEl = document.getElementById("proVal")
@@ -817,21 +1080,37 @@ animateNumber(proEl, lastProtein, total.protein, 0)
 lastCal = total.cal
 lastProtein = total.protein
 
-  // no-op (removed update animation)
+  // Ensure result is visible when calculated
+  resultEl.style.visibility = "visible"
   resultEl.classList.add("active")
   setTimeout(() => resultEl.classList.remove("active"), 600)
   if (navigator.vibrate) navigator.vibrate(5);
-  resultEl.style.visibility = "visible"
+  updateResultVisibility()
 }
 
 init()
+
+function updateResultVisibility(){
+  const resultEl = document.getElementById("result")
+  const y = window.scrollY
+
+  if(y > 20){
+    resultEl.style.opacity = "1"
+    resultEl.style.pointerEvents = "none"
+  } else {
+    resultEl.style.opacity = "0"
+    resultEl.style.pointerEvents = "none"
+  }
+}
 
 
 window.addEventListener("scroll", () => {
   const logo = document.querySelector(".logo")
   const y = window.scrollY
 
-  if(y > 20){
+  updateResultVisibility()
+
+  if(y > 10){
     logo.style.transform = "scale(0.95)"
     logo.style.opacity = "0.9"
   } else {
@@ -840,21 +1119,16 @@ window.addEventListener("scroll", () => {
   }
 })
 
-let pressTimer
-const resultBox = document.getElementById("result")
-resultBox.addEventListener("touchstart", () => {
-  pressTimer = setTimeout(()=>{
-    document.querySelectorAll("#addonList > div").forEach((el,i)=>{
-      if(i!==0) el.remove()
-    })
-    document.getElementById("sauce2Toggle").checked = false
-    toggleSauce2({checked:false})
-    calc()
-  },600)
-})
-resultBox.addEventListener("touchend", ()=> clearTimeout(pressTimer))
+
 
 </script>
-
+<div id="addonModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;z-index:10000;">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top-left-radius:20px;border-top-right-radius:20px;padding:16px;height:70vh;display:flex;flex-direction:column;">
+    <div id="addonCategoriesWrapper" style="flex:0 0 auto;background:#fff;padding-bottom:8px;">
+      <div id="addonModalCategories" style="display:flex;gap:8px;overflow:auto;"></div>
+    </div>
+    <div id="addonItems" style="flex:1;overflow:auto;"></div>
+  </div>
+</div>
 </body>
 </html>
