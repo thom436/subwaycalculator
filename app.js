@@ -152,9 +152,7 @@ function updateMainPickerLabel(){
   }
 
   const en = mainNameMap[value] || ""
-  const cal = data.main[value] ? data.main[value].cal : null
-  const baseLabel = en ? `${value} ${en}` : value
-  picker.textContent = cal !== null ? `${baseLabel} · ${cal} kcal` : baseLabel
+  picker.textContent = en ? `${value} ${en}` : value
   picker.style.color = "#000"
 }
 
@@ -213,7 +211,7 @@ function renderMainItems(group){
 
   const sortedNames = [...(mainGroups[group] || [])]
     .filter(name => !!data.main[name])
-    .sort((a,b)=> data.main[a].cal - data.main[b].cal)
+    .sort((a,b)=> data.main[b].cal - data.main[a].cal)
 
   sortedNames.forEach(name=>{
     if(!data.main[name]) return;
@@ -360,16 +358,34 @@ function renderAddonItems(group){
   const selected = new Set(getSelectedAddonValues(addonPickerTargetHidden))
   const editingCurrentValue = addonPickerTargetHidden ? addonPickerTargetHidden.value : ""
 
-  addonGroups[group].forEach(name=>{
+  const sortedAddonNames = [...(addonGroups[group] || [])]
+    .filter(name => !!data.addon[name])
+    .sort((a,b)=> data.addon[b].cal - data.addon[a].cal)
+
+  sortedAddonNames.forEach(name=>{
     if(!data.addon[name]) return;
 
     const div = document.createElement("div")
     div.style.padding = "12px"
     div.style.borderBottom = "1px solid #eee"
     div.style.cursor = "pointer"
+    div.style.display = "flex"
+    div.style.justifyContent = "space-between"
+    div.style.alignItems = "center"
 
     const en = addonNameMap[name] || ""
-    div.textContent = en ? `${name} ${en}` : name
+    const textWrap = document.createElement("div")
+    textWrap.textContent = en ? `${name} ${en}` : name
+    textWrap.style.paddingRight = "10px"
+
+    const meta = document.createElement("div")
+    meta.textContent = `${data.addon[name].cal} kcal`
+    meta.style.fontSize = "12px"
+    meta.style.color = "#8e8e93"
+    meta.style.whiteSpace = "nowrap"
+
+    div.appendChild(textWrap)
+    div.appendChild(meta)
     const alreadySelected = selected.has(name)
     if(alreadySelected){
       div.style.opacity = "0.45"
@@ -417,6 +433,7 @@ updateMainPickerLabel()
 
 document.getElementById("sauce1").value = ""
 updateSaucePickerLabel("sauce1")
+updateSauce2Visibility()
 
 updateAddonUI()
 
@@ -689,10 +706,30 @@ function startAddonDrag(e, wrapper){
 }
 
 function getSauceDisplayText(value){
-  if(value === "__NONE__") return "不加醬 · No sauce"
+  if(value === "__NONE__") return "不加醬 No sauce"
   if(!value) return "尚未選擇醬料 · Choose sauce"
   const en = sauceNameMap[value] || ""
   return en ? `${value} ${en}` : value
+}
+
+function updateSauce2Visibility(){
+  const sauce1Value = document.getElementById("sauce1").value
+  const section = document.getElementById("sauce2Section")
+  const list = document.getElementById("sauce2List")
+  const btn = document.getElementById("sauce2Btn")
+  if(!section || !list || !btn) return
+
+  if(sauce1Value === "__NONE__"){
+    list.innerHTML = ""
+    section.style.display = "none"
+    btn.style.display = "inline-block"
+    return
+  }
+
+  section.style.display = "flex"
+  if(list.children.length === 0){
+    btn.style.display = "inline-block"
+  }
 }
 
 function updateSaucePickerLabel(target = "sauce1"){
@@ -702,6 +739,7 @@ function updateSaucePickerLabel(target = "sauce1"){
     if(!picker) return
     picker.textContent = getSauceDisplayText(value)
     picker.style.color = value ? "#000" : "#8e8e93"
+    updateSauce2Visibility()
     return
   }
 
@@ -738,7 +776,21 @@ function openSaucePicker(target = "sauce1"){
     noneRow.style.padding = "12px"
     noneRow.style.borderBottom = "1px solid #eee"
     noneRow.style.cursor = "pointer"
-    noneRow.textContent = "不加醬 · No sauce"
+    noneRow.style.display = "flex"
+    noneRow.style.justifyContent = "space-between"
+    noneRow.style.alignItems = "center"
+    noneRow.textContent = "不加醬 No sauce"
+    const noneMeta = document.createElement("div")
+    noneMeta.textContent = "0 kcal"
+    noneMeta.style.fontSize = "12px"
+    noneMeta.style.color = "#8e8e93"
+    noneMeta.style.whiteSpace = "nowrap"
+    noneRow.textContent = ""
+    const noneText = document.createElement("div")
+    noneText.textContent = "不加醬 No sauce"
+    noneText.style.paddingRight = "10px"
+    noneRow.appendChild(noneText)
+    noneRow.appendChild(noneMeta)
     if(selectedValue === "__NONE__"){
       noneRow.style.background = "#f2fdf6"
     }
@@ -755,13 +807,28 @@ function openSaucePicker(target = "sauce1"){
     itemsEl.appendChild(noneRow)
   }
 
-  Object.keys(data.sauce).forEach(name=>{
+  const sortedSauceNames = Object.keys(data.sauce)
+    .sort((a,b)=> data.sauce[b].cal - data.sauce[a].cal)
+
+  sortedSauceNames.forEach(name=>{
     const div = document.createElement("div")
     div.style.padding = "12px"
     div.style.borderBottom = "1px solid #eee"
     div.style.cursor = "pointer"
+    div.style.display = "flex"
+    div.style.justifyContent = "space-between"
+    div.style.alignItems = "center"
     const en = sauceNameMap[name] || ""
-    div.textContent = en ? `${name} ${en}` : name
+    const textWrap = document.createElement("div")
+    textWrap.textContent = en ? `${name} ${en}` : name
+    textWrap.style.paddingRight = "10px"
+    const meta = document.createElement("div")
+    meta.textContent = `${data.sauce[name].cal} kcal`
+    meta.style.fontSize = "12px"
+    meta.style.color = "#8e8e93"
+    meta.style.whiteSpace = "nowrap"
+    div.appendChild(textWrap)
+    div.appendChild(meta)
 
     if(isBlocked(name)){
       div.style.opacity = "0.45"
@@ -1022,15 +1089,6 @@ if(sauce1 && sauce2Visible && sauce2){
 }
 
 const resultEl = document.getElementById("result")
-const hasSauce = !!sauce1 || !!sauce2 || noSauceSelected
-if(!hasSauce){
-  resultEnabled = false
-  resultEl.classList.remove("active")
-  resultEl.style.visibility = "visible"
-  showResultHint()
-  updateResultVisibility()
-  return
-}
 
 const selectedSauceCount = (sauce1 ? 1 : 0) + (sauce2 ? 1 : 0)
 const summaryText = `主餐 1 份 + 加料 ${selectedAddonNames.length} 份 + 醬料 ${selectedSauceCount} 種`
@@ -1110,6 +1168,7 @@ function resetAll(){
   const sauce1 = document.getElementById("sauce1")
   sauce1.value = ""
   updateSaucePickerLabel("sauce1")
+  updateSauce2Visibility()
   const sauce2List = document.getElementById("sauce2List")
   sauce2List.innerHTML = ""
   const sauce2Btn = document.getElementById("sauce2Btn")
