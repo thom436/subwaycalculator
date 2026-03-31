@@ -183,6 +183,19 @@ select:focus-visible {
   box-shadow: 0 0 0 2px rgba(47,168,79,0.22);
 }
 
+.modal-section-label {
+  font-size: 11px;
+  color: #8e8e93;
+  padding: 8px 12px 4px;
+  letter-spacing: 0.2px;
+}
+
+.modal-section-divider {
+  height: 1px;
+  margin: 4px 12px 0;
+  background: #e7e8ed;
+}
+
 #addonList .addon-row .picker-field {
   margin-top: 12px;
   font-weight: 400;
@@ -550,6 +563,14 @@ input[type="checkbox"]:active {
 
   .modal-search-input::placeholder {
     color: #9aa0ad;
+  }
+
+  .modal-section-label {
+    color: #9aa0ad;
+  }
+
+  .modal-section-divider {
+    background: #2f3440;
   }
 
   .result-copy-btn {

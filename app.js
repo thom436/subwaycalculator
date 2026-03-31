@@ -188,10 +188,14 @@ function saveRecentItem(type, item){
 function appendRecentLabel(container){
   const label = document.createElement("div")
   label.textContent = "最近使用 Recent"
-  label.style.fontSize = "12px"
-  label.style.color = "#8e8e93"
-  label.style.padding = "10px 12px 6px"
+  label.className = "modal-section-label"
   container.appendChild(label)
+}
+
+function appendSectionDivider(container){
+  const divider = document.createElement("div")
+  divider.className = "modal-section-divider"
+  container.appendChild(divider)
 }
 
 function compactZhShareName(name){
@@ -348,13 +352,16 @@ function renderMainItems(group){
     itemsEl.appendChild(div)
   }
 
+  const restNames = sortedNames.filter(name => !recentMainNames.includes(name))
   const hasRecent = recentMainNames.length > 0
   if(hasRecent){
     appendRecentLabel(itemsEl)
     recentMainNames.forEach(renderMainItem)
+    if(restNames.length){
+      appendSectionDivider(itemsEl)
+    }
   }
 
-  const restNames = sortedNames.filter(name => !recentMainNames.includes(name))
   restNames.forEach(renderMainItem)
 }
 
@@ -555,6 +562,9 @@ function renderAddonItems(group){
   if(recentAddonNames.length){
     appendRecentLabel(itemsEl)
     recentAddonNames.forEach(renderAddonItem)
+    if(groupNamesWithoutRecent.length){
+      appendSectionDivider(itemsEl)
+    }
   }
 
   groupNamesWithoutRecent.forEach(renderAddonItem)
@@ -891,6 +901,9 @@ function openSaucePicker(target = "sauce1"){
   if(recentSauceNames.length){
     appendRecentLabel(itemsEl)
     recentSauceNames.forEach(renderSauceItem)
+    if(restSauceNames.length){
+      appendSectionDivider(itemsEl)
+    }
   }
 
   restSauceNames.forEach(renderSauceItem)
