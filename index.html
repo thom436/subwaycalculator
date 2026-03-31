@@ -41,8 +41,13 @@
       ontouchstart="event.stopPropagation()">
   </div>
 </div>
-<div id="mainPicker" class="picker-field picker-field--placeholder picker-field--plus" onclick="openMainPicker()" style="margin-top:12px;">
-  +
+<div id="mainPickerRow" class="picker-row-with-minus" style="margin-top:12px;">
+  <div id="mainPicker" class="picker-field picker-field--placeholder picker-field--plus" onclick="openMainPicker()">
+    +
+  </div>
+  <button type="button" id="mainRemoveBtn" class="minus-btn" onclick="removeMain()" style="display:none;">
+    −
+  </button>
 </div>
 <select id="main" onchange="calc()" style="display:none;"></select>
 </div>

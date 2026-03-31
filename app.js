@@ -412,12 +412,17 @@ let mainActiveGroup = ""
 function updateMainPickerLabel(){
   const value = document.getElementById("main").value
   const picker = document.getElementById("mainPicker")
+  const removeBtn = document.getElementById("mainRemoveBtn")
+  const row = document.getElementById("mainPickerRow")
   if(!picker) return
 
   if(!value){
     picker.textContent = "+"
     picker.classList.add("picker-field--placeholder")
     picker.classList.add("picker-field--plus")
+    picker.classList.remove("picker-field-with-minus")
+    if(removeBtn) removeBtn.style.display = "none"
+    closeSwipeRow(row)
     return
   }
 
@@ -425,9 +430,20 @@ function updateMainPickerLabel(){
   picker.textContent = en ? `${value} ${en}` : value
   picker.classList.remove("picker-field--placeholder")
   picker.classList.remove("picker-field--plus")
+  picker.classList.add("picker-field-with-minus")
+  if(removeBtn) removeBtn.style.display = "flex"
+}
+
+function removeMain(){
+  const mainSelect = document.getElementById("main")
+  if(!mainSelect) return
+  mainSelect.value = ""
+  updateMainPickerLabel()
+  calc()
 }
 
 function openMainPicker(defaultGroup = ""){
+  if(isPickerTapSuppressed()) return
   const modal = document.getElementById("mainModal")
   const catEl = document.getElementById("mainModalCategories")
   const itemsEl = document.getElementById("mainItems")
@@ -1513,6 +1529,9 @@ lastMainForFeedback = main
 
 init()
 bindResultCardTap()
+attachSwipeToReveal(document.getElementById("mainPickerRow"), ()=>{
+  removeMain()
+}, ()=> !!document.getElementById("main").value)
 attachSwipeToReveal(document.getElementById("sauce1Row"), ()=>{
   removeSauce1()
 }, ()=> !!document.getElementById("sauce1").value)
