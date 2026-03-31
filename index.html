@@ -22,8 +22,8 @@
   <span class="title-sub"> 計算機</span>
 </h2>
 <div style="display:flex;justify-content:flex-end;margin-top:-10px;margin-bottom:16px;">
-  <button type="button" onclick="resetAll()" style="padding:8px 14px;border-radius:999px;border:1px solid #d1d1d6;background:#fff;color:#1c1c1e;font-size:13px;font-weight:600;">
-    重設全部
+  <button type="button" class="reset-btn" onclick="resetAll()">
+    重設全部 Reset all
   </button>
 </div>
 
@@ -35,14 +35,14 @@
   <div style="color:#8e8e93;font-size:13px;font-weight:400;">6" Sandwich</div>
 </div>
   <div style="display:flex;align-items:center;gap:8px;">
-    <span style="font-size:14px;color:#666;">雙份肉</span>
+    <span class="double-meat-label">雙份肉 Double meat</span>
     <input type="checkbox" id="double" onchange="calc()"
       onclick="event.stopPropagation()"
       ontouchstart="event.stopPropagation()">
   </div>
 </div>
-<div id="mainPicker" onclick="openMainPicker()" style="margin-top:12px;padding:14px;border-radius:14px;border:1px solid #e5e5ea;background:#f9f9f9;color:#8e8e93;font-size:17px;line-height:1.4;min-height:48px;display:flex;align-items:center;cursor:pointer;">
-  尚未選擇口味 · Choose flavor
+<div id="mainPicker" class="picker-field picker-field--placeholder" onclick="openMainPicker()" style="margin-top:12px;">
+  尚未選擇口味 Choose flavor
 </div>
 <select id="main" onchange="calc()" style="display:none;"></select>
 </div>
@@ -53,15 +53,12 @@
   <span>加料</span>
   <span id="addonLabel" style="color:#8e8e93;font-size:13px;font-weight:400;">Add-ons (0)</span>
 </label>
-<div id="addonList" style="min-height:10px;"></div>
-<div id="addonEmpty" style="font-size:13px;color:#aeaeb2;margin-top:6px;">
-  尚未選擇加料 · No add-ons yet
-  <div id="swipeHint" style="margin-top:4px;font-size:12px;color:#c7c7cc;">
-    ← 左滑刪除 · Swipe left to delete
-  </div>
+<div id="addonEmptyPicker" class="picker-field picker-field--placeholder" onclick="openAddonPicker(addonActiveGroup)" style="margin-top:12px;">
+  尚未選擇加料 Choose add-on
 </div>
-<div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
-  <button type="button" id="addonAddBtn" onclick="openAddonPicker(addonActiveGroup)" style="padding:8px 14px;border-radius:999px;border:none;background:#34c759;color:#fff;font-size:13px;font-weight:500;">
+<div id="addonList" style="min-height:10px;"></div>
+<div id="addonActions" style="margin-top:12px;display:none;align-items:center;gap:10px;">
+  <button type="button" id="addonAddBtn" onclick="openAddonPicker(addonActiveGroup)" style="padding:8px 14px;border-radius:999px;border:none;background:var(--ios-green-btn);color:var(--ios-green-on);font-size:13px;font-weight:500;">
     + 新增加料
   </button>
   <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add another add-on</span>
@@ -74,13 +71,18 @@
   <span>醬料</span>
   <span style="color:#8e8e93;font-size:13px;font-weight:400;">Sauce</span>
 </label>
-<div id="sauce1Picker" onclick="openSaucePicker('sauce1')" style="margin-top:12px;padding:14px;border-radius:14px;border:1px solid #e5e5ea;background:#f9f9f9;color:#8e8e93;font-size:17px;line-height:1.4;min-height:48px;display:flex;align-items:center;cursor:pointer;">
-  尚未選擇醬料 · Choose sauce
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+  <div id="sauce1Picker" class="picker-field picker-field-fill picker-field--placeholder" onclick="openSaucePicker('sauce1')">
+    不加醬 No sauce
+  </div>
+  <button type="button" id="sauce1RemoveBtn" onclick="removeSauce1()" style="border:none;background:#e5e5ea;border-radius:50%;width:28px;height:28px;display:none;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:#1c1c1e;">
+    −
+  </button>
 </div>
 <input type="hidden" id="sauce1" value="">
 
   <div id="sauce2Section" style="margin-top:12px;display:flex;align-items:center;gap:10px;">
-    <button type="button" id="sauce2Btn" onclick="addSauce2()" style="padding:8px 14px;border-radius:999px;border:none;background:#34c759;color:#fff;font-size:13px;font-weight:500;">
+    <button type="button" id="sauce2Btn" onclick="addSauce2()" style="padding:8px 14px;border-radius:999px;border:none;background:var(--ios-green-btn);color:var(--ios-green-on);font-size:13px;font-weight:500;">
       + 第二種醬料
     </button>
     <span style="color:#8e8e93;font-size:13px;font-weight:400;">Add second sauce</span>

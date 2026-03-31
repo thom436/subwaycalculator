@@ -107,6 +107,8 @@ const sauceNameMap = {
   "墨西哥辣椒起司醬":"Jalapeno Cheese Sauce"
 }
 
+const NO_SAUCE_LABEL = "不加醬 No sauce"
+
 function buildGroups(seedGroups, allItems, extraGroupName = "其他"){
   const groups = {}
   const used = new Set()
@@ -122,18 +124,36 @@ function buildGroups(seedGroups, allItems, extraGroupName = "其他"){
   return groups
 }
 
+function getSelectionHighlightColor(){
+  const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+  return isDark ? "rgba(47,168,79,0.22)" : "#edf9f0"
+}
+
+function isDarkMode(){
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+}
+
+function styleModalCategoryButton(btn, active){
+  const dark = isDarkMode()
+  btn.style.padding = "8px 12px"
+  btn.style.borderRadius = "999px"
+  btn.style.border = dark ? "1px solid #3a3a3c" : "1px solid #ddd"
+  btn.style.background = active ? "#2fa84f" : (dark ? "#2c2c2e" : "#fff")
+  btn.style.color = active ? "#f3fff7" : (dark ? "#f2f2f7" : "#000")
+}
+
 const mainSeedGroups = {
-  "雞肉系": ["照燒雞肉","鮮嫩雞柳","香烤雞肉","嫩切雞肉"],
   "牛肉系": ["厚切嫩牛","燒烤牛肉","墨西哥辣牛","義大利牛肉丸"],
+  "雞肉系": ["照燒雞肉","鮮嫩雞柳","香烤雞肉","嫩切雞肉"],
   "豬肉冷切系": ["火腿","百味俱樂部","義大利經典","哈燒起司總匯","墨西哥手撕豬"],
   "海鮮蛋素食": ["鮪魚","蛋沙拉","鷹嘴豆泥餅","素食蔬菜"]
 }
 
 const addonSeedGroups = {
+  "起司蛋配料": ["切絲巧達起司","英式切片起司(2片)","嫩煎蛋(1片)","酪梨泥(1球)","蛋沙拉(1球)","蛋沙拉(2球)"],
   "雞肉": ["鮮嫩雞柳","嫩切雞肉(3片)","嫩切雞肉(1片)","香烤雞肉","照燒雞肉"],
   "牛肉": ["厚切嫩牛","燒烤牛肉(3片/59g)","燒烤牛肉(1片/19.5g)","墨西哥辣牛","辣豆瓣嫩牛","義大利牛肉丸"],
   "豬肉冷切": ["火腿(4片)","火腿(1片)","墨西哥手撕豬","義大利經典","百味俱樂部","哈燒起司總匯","義式辣香腸(1片)","義式煙燻臘腸(1片)","培根(1條)"],
-  "起司蛋配料": ["切絲巧達起司","英式切片起司(2片)","嫩煎蛋(1片)","酪梨泥(1球)","蛋沙拉(1球)","蛋沙拉(2球)"],
   "海鮮素食": ["鮪魚","鷹嘴豆泥餅(1顆)","鷹嘴豆泥餅(3顆)"]
 }
 
@@ -146,14 +166,14 @@ function updateMainPickerLabel(){
   if(!picker) return
 
   if(!value){
-    picker.textContent = "尚未選擇口味 · Choose flavor"
-    picker.style.color = "#8e8e93"
+    picker.textContent = "尚未選擇口味 Choose flavor"
+    picker.classList.add("picker-field--placeholder")
     return
   }
 
   const en = mainNameMap[value] || ""
   picker.textContent = en ? `${value} ${en}` : value
-  picker.style.color = "#000"
+  picker.classList.remove("picker-field--placeholder")
 }
 
 function openMainPicker(defaultGroup = ""){
@@ -178,20 +198,12 @@ function openMainPicker(defaultGroup = ""){
   groupNames.forEach((g)=>{
     const btn = document.createElement("button")
     btn.textContent = g
-    btn.style.padding = "8px 12px"
-    btn.style.borderRadius = "999px"
-    btn.style.border = "1px solid #ddd"
-    btn.style.background = g===selectedGroup ? "#34c759" : "#fff"
-    btn.style.color = g===selectedGroup ? "#fff" : "#000"
+    styleModalCategoryButton(btn, g===selectedGroup)
 
     btn.onclick = ()=>{
       mainActiveGroup = g
-      document.querySelectorAll("#mainModalCategories button").forEach(b=>{
-        b.style.background="#fff"
-        b.style.color="#000"
-      })
-      btn.style.background="#34c759"
-      btn.style.color="#fff"
+      document.querySelectorAll("#mainModalCategories button").forEach(b=>styleModalCategoryButton(b,false))
+      styleModalCategoryButton(btn,true)
       renderMainItems(g)
     }
 
@@ -243,6 +255,7 @@ function renderMainItems(group){
       mainSelect.value = name
       updateMainPickerLabel()
       document.getElementById("mainModal").style.display="none"
+      shouldPopResultOnNextCalc = true
       calc()
     }
 
@@ -325,20 +338,12 @@ function openAddonPicker(defaultGroup = "", targetRow = null){
   groupNames.forEach((g)=>{
     const btn = document.createElement("button")
     btn.textContent = g
-    btn.style.padding = "8px 12px"
-    btn.style.borderRadius = "999px"
-    btn.style.border = "1px solid #ddd"
-    btn.style.background = g===selectedGroup ? "#34c759" : "#fff"
-    btn.style.color = g===selectedGroup ? "#fff" : "#000"
+    styleModalCategoryButton(btn, g===selectedGroup)
 
     btn.onclick = ()=>{
       addonActiveGroup = g
-      document.querySelectorAll("#addonModalCategories button").forEach(b=>{
-        b.style.background="#fff"
-        b.style.color="#000"
-      })
-      btn.style.background="#34c759"
-      btn.style.color="#fff"
+      document.querySelectorAll("#addonModalCategories button").forEach(b=>styleModalCategoryButton(b,false))
+      styleModalCategoryButton(btn,true)
       renderAddonItems(g)
     }
 
@@ -391,7 +396,7 @@ function renderAddonItems(group){
       div.style.opacity = "0.45"
       div.style.cursor = "not-allowed"
     } else if(editingCurrentValue && name === editingCurrentValue){
-      div.style.background = "#f2fdf6"
+      div.style.background = getSelectionHighlightColor()
     }
 
     div.onclick = ()=>{
@@ -424,10 +429,7 @@ Object.keys(data.main).forEach(name=>{
   main.innerHTML += `<option value="${name}">${label}</option>`;
 })
 
-const firstGroup = mainActiveGroup
-if(firstGroup && mainGroups[firstGroup] && mainGroups[firstGroup][0]){
-  main.value = mainGroups[firstGroup][0]
-}
+main.value = ""
 updateMainPickerLabel()
 
 
@@ -519,23 +521,44 @@ function createAddonSelect(removable = true){
   wrapper.style.position = "relative"
   wrapper.style.overflow = "visible"
 
+  // Long-press anywhere on the row (except remove button) to reorder.
+  let holdTimer = null
+  let holdStartX = 0
+  let holdStartY = 0
+  const clearHoldTimer = ()=>{
+    if(holdTimer){
+      clearTimeout(holdTimer)
+      holdTimer = null
+    }
+  }
+
+  wrapper.addEventListener("pointerdown", (e)=>{
+    if(e.pointerType === "mouse" && e.button !== 0) return
+    if(e.target && e.target.closest('[data-role="remove-addon"]')) return
+    if(wrapper.dataset.dragging === "1") return
+
+    holdStartX = e.clientX
+    holdStartY = e.clientY
+    holdTimer = setTimeout(()=>{
+      holdTimer = null
+      startAddonDrag(e, wrapper)
+    }, 120)
+  })
+
+  wrapper.addEventListener("pointermove", (e)=>{
+    if(!holdTimer) return
+    const movedX = Math.abs(e.clientX - holdStartX)
+    const movedY = Math.abs(e.clientY - holdStartY)
+    if(movedX > 8 || movedY > 8){
+      clearHoldTimer()
+    }
+  })
+
+  wrapper.addEventListener("pointerup", clearHoldTimer)
+  wrapper.addEventListener("pointercancel", clearHoldTimer)
+
   const display = document.createElement("div")
-  display.style.flex = "1"
-  display.style.marginTop = "12px"
-  display.style.padding = "14px"
-  display.style.borderRadius = "14px"
-  display.style.border = "1px solid #e5e5ea"
-  display.style.background = "#f9f9f9"
-  display.style.color = "#000"
-  display.style.fontSize = "17px"
-  display.style.lineHeight = "1.4"
-  display.style.minHeight = "48px"
-  display.style.fontWeight = "400"
-  display.style.position = "relative"
-  display.style.zIndex = "1"
-  display.style.display = "flex"
-  display.style.alignItems = "center"
-  display.style.cursor = "pointer"
+  display.className = "picker-field picker-field-fill picker-field--placeholder picker-draggable"
   display.textContent = "尚未選擇加料"
   display.onclick = ()=>{
     openAddonPicker(addonActiveGroup, wrapper)
@@ -554,27 +577,6 @@ function createAddonSelect(removable = true){
     controls.style.display = "flex"
     controls.style.gap = "6px"
     controls.style.alignItems = "center"
-
-    const dragBtn = document.createElement("button")
-    dragBtn.textContent = "≡"
-    dragBtn.dataset.role = "drag-addon"
-    dragBtn.style.border = "none"
-    dragBtn.style.background = "#e5e5ea"
-    dragBtn.style.borderRadius = "50%"
-    dragBtn.style.width = "28px"
-    dragBtn.style.height = "28px"
-    dragBtn.style.display = "flex"
-    dragBtn.style.alignItems = "center"
-    dragBtn.style.justifyContent = "center"
-    dragBtn.style.fontSize = "15px"
-    dragBtn.style.cursor = "grab"
-    dragBtn.style.color = "#1c1c1e"
-    dragBtn.style.transition = "all 0.15s ease"
-    dragBtn.style.opacity = "0.7"
-    dragBtn.style.touchAction = "none"
-    dragBtn.onpointerdown = (e) => {
-      startAddonDrag(e, wrapper)
-    }
 
     const removeBtn = document.createElement("button")
     removeBtn.textContent = "−"
@@ -600,7 +602,6 @@ function createAddonSelect(removable = true){
       calc()
     }
 
-    controls.appendChild(dragBtn)
     controls.appendChild(removeBtn)
     wrapper.appendChild(controls)
   }
@@ -615,12 +616,12 @@ function setAddonValue(wrapper, value){
   hidden.value = value || ""
   if(!value){
     display.textContent = "尚未選擇加料"
-    display.style.color = "#8e8e93"
+    display.classList.add("picker-field--placeholder")
     return
   }
   const en = addonNameMap[value] || ""
   display.textContent = en ? `${value} ${en}` : value
-  display.style.color = "#000"
+  display.classList.remove("picker-field--placeholder")
 }
 
 function addAddon(defaultValue = ""){
@@ -647,9 +648,15 @@ function addAddon(defaultValue = ""){
 function updateAddonUI(){
   const count = document.querySelectorAll("#addonList .addon-row").length
   const label = document.getElementById("addonLabel")
-  const empty = document.getElementById("addonEmpty")
+  const emptyPicker = document.getElementById("addonEmptyPicker")
+  const addonActions = document.getElementById("addonActions")
   label.textContent = `Add-ons (${count})`
-  empty.style.display = count ? "none" : "block"
+  if(emptyPicker){
+    emptyPicker.style.display = count === 0 ? "flex" : "none"
+  }
+  if(addonActions){
+    addonActions.style.display = count === 0 ? "none" : "flex"
+  }
 
   // show swipe hint only when there are add-ons
   const hint = document.getElementById("swipeHint")
@@ -706,8 +713,7 @@ function startAddonDrag(e, wrapper){
 }
 
 function getSauceDisplayText(value){
-  if(value === "__NONE__") return "不加醬 No sauce"
-  if(!value) return "尚未選擇醬料 · Choose sauce"
+  if(!value) return NO_SAUCE_LABEL
   const en = sauceNameMap[value] || ""
   return en ? `${value} ${en}` : value
 }
@@ -719,26 +725,28 @@ function updateSauce2Visibility(){
   const btn = document.getElementById("sauce2Btn")
   if(!section || !list || !btn) return
 
-  if(sauce1Value === "__NONE__"){
+  if(!sauce1Value){
     list.innerHTML = ""
     section.style.display = "none"
-    btn.style.display = "inline-block"
     return
   }
 
-  section.style.display = "flex"
-  if(list.children.length === 0){
-    btn.style.display = "inline-block"
-  }
+  const hasSecondSauceRow = list.children.length > 0
+  section.style.display = hasSecondSauceRow ? "none" : "flex"
+  btn.style.display = "inline-block"
 }
 
 function updateSaucePickerLabel(target = "sauce1"){
   if(target === "sauce1"){
     const picker = document.getElementById("sauce1Picker")
     const value = document.getElementById("sauce1").value
+    const removeBtn = document.getElementById("sauce1RemoveBtn")
     if(!picker) return
     picker.textContent = getSauceDisplayText(value)
-    picker.style.color = value ? "#000" : "#8e8e93"
+    picker.classList.toggle("picker-field--placeholder", !value)
+    if(removeBtn){
+      removeBtn.style.display = value ? "flex" : "none"
+    }
     updateSauce2Visibility()
     return
   }
@@ -750,8 +758,24 @@ function updateSaucePickerLabel(target = "sauce1"){
   const value = hidden ? hidden.value : ""
   if(display){
     display.textContent = getSauceDisplayText(value)
-    display.style.color = value ? "#000" : "#8e8e93"
+    display.classList.toggle("picker-field--placeholder", !value)
   }
+}
+
+function swapSauceOrder(){
+  const sauce1Input = document.getElementById("sauce1")
+  const sauce2Input = document.querySelector('#sauce2List input[data-role="sauce-value"]')
+  if(!sauce1Input || !sauce2Input) return
+
+  const sauce1Value = sauce1Input.value || ""
+  const sauce2Value = sauce2Input.value || ""
+  if(!sauce1Value || !sauce2Value) return
+
+  sauce1Input.value = sauce2Value
+  sauce2Input.value = sauce1Value
+  updateSaucePickerLabel("sauce1")
+  updateSaucePickerLabel("sauce2")
+  calc()
 }
 
 function openSaucePicker(target = "sauce1"){
@@ -766,46 +790,8 @@ function openSaucePicker(target = "sauce1"){
   const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
   const sauce2Value = sauce2ValueInput ? sauce2ValueInput.value : ""
   const selectedValue = target === "sauce1" ? sauce1Value : sauce2Value
-  const normalizedSauce1 = sauce1Value === "__NONE__" ? "" : sauce1Value
-  const normalizedSauce2 = sauce2Value === "__NONE__" ? "" : sauce2Value
-  const otherSauceValue = target === "sauce2" ? normalizedSauce1 : normalizedSauce2
+  const otherSauceValue = target === "sauce2" ? sauce1Value : sauce2Value
   const isBlocked = (name)=> !!otherSauceValue && name === otherSauceValue && name !== selectedValue
-
-  if(target === "sauce1"){
-    const noneRow = document.createElement("div")
-    noneRow.style.padding = "12px"
-    noneRow.style.borderBottom = "1px solid #eee"
-    noneRow.style.cursor = "pointer"
-    noneRow.style.display = "flex"
-    noneRow.style.justifyContent = "space-between"
-    noneRow.style.alignItems = "center"
-    noneRow.textContent = "不加醬 No sauce"
-    const noneMeta = document.createElement("div")
-    noneMeta.textContent = "0 kcal"
-    noneMeta.style.fontSize = "12px"
-    noneMeta.style.color = "#8e8e93"
-    noneMeta.style.whiteSpace = "nowrap"
-    noneRow.textContent = ""
-    const noneText = document.createElement("div")
-    noneText.textContent = "不加醬 No sauce"
-    noneText.style.paddingRight = "10px"
-    noneRow.appendChild(noneText)
-    noneRow.appendChild(noneMeta)
-    if(selectedValue === "__NONE__"){
-      noneRow.style.background = "#f2fdf6"
-    }
-    noneRow.onclick = ()=>{
-      document.getElementById("sauce1").value = "__NONE__"
-      const sauce2List = document.getElementById("sauce2List")
-      if(sauce2List) sauce2List.innerHTML = ""
-      const sauce2Btn = document.getElementById("sauce2Btn")
-      if(sauce2Btn) sauce2Btn.style.display = "inline-block"
-      updateSaucePickerLabel("sauce1")
-      modal.style.display = "none"
-      calc()
-    }
-    itemsEl.appendChild(noneRow)
-  }
 
   const sortedSauceNames = Object.keys(data.sauce)
     .sort((a,b)=> data.sauce[b].cal - data.sauce[a].cal)
@@ -834,7 +820,7 @@ function openSaucePicker(target = "sauce1"){
       div.style.opacity = "0.45"
       div.style.cursor = "not-allowed"
     } else if(name === selectedValue){
-      div.style.background = "#f2fdf6"
+      div.style.background = getSelectionHighlightColor()
     }
 
     div.onclick = ()=>{
@@ -864,14 +850,56 @@ function createSauceSelect(){
   wrapper.className = "sauce-row"
 
   let startX = 0, startY = 0, currentX = 0, isSwiping = false;
+  let holdTimer = null
+  let holdStartX = 0
+  let holdStartY = 0
+  let dragStartY = 0
+  let dragCurrentY = 0
+  let suppressOpenUntil = 0
+
+  const suppressOpenForDrag = ()=>{
+    suppressOpenUntil = Date.now() + 300
+  }
+
+  const clearHoldTimer = ()=>{
+    if(holdTimer){
+      clearTimeout(holdTimer)
+      holdTimer = null
+    }
+  }
+
+  const endSauceDrag = ()=>{
+    const diffY = dragCurrentY - dragStartY
+    wrapper.style.transition = "all 0.2s ease"
+    wrapper.style.transform = "translateY(0)"
+    wrapper.style.opacity = "1"
+    wrapper.style.zIndex = "1"
+    delete wrapper.dataset.dragging
+    suppressOpenForDrag()
+
+    if(diffY < -40){
+      swapSauceOrder()
+    }
+  }
 
   wrapper.addEventListener("touchstart", (e) => {
+    if (wrapper.dataset.dragging === "1") return
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isSwiping = false;
   });
 
   wrapper.addEventListener("touchmove", (e) => {
+    if(wrapper.dataset.dragging === "1"){
+      dragCurrentY = e.touches[0].clientY
+      const diffY = dragCurrentY - dragStartY
+      e.preventDefault()
+      wrapper.style.transition = "none"
+      wrapper.style.transform = `translateY(${diffY}px)`
+      wrapper.style.opacity = "0.85"
+      return
+    }
+
     currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
     const diffX = currentX - startX;
@@ -892,6 +920,11 @@ function createSauceSelect(){
   });
 
   wrapper.addEventListener("touchend", () => {
+    if(wrapper.dataset.dragging === "1"){
+      endSauceDrag()
+      return
+    }
+
     const diff = currentX - startX;
 
     if (isSwiping && diff < -80) {
@@ -901,11 +934,7 @@ function createSauceSelect(){
 
       setTimeout(() => {
         wrapper.remove();
-
-        // restore button after swipe delete
-        const btn = document.getElementById("sauce2Btn")
-        if(btn) btn.style.display = "inline-block"
-
+        updateSauce2Visibility()
         calc();
       }, 200);
     } else {
@@ -924,22 +953,61 @@ function createSauceSelect(){
   wrapper.style.gap = "8px"
   wrapper.style.marginTop = "8px"
 
+  wrapper.addEventListener("pointerdown", (e)=>{
+    if(e.pointerType === "mouse" && e.button !== 0) return
+    if(e.target && e.target.closest("button")) return
+    if(wrapper.dataset.dragging === "1") return
+
+    holdStartX = e.clientX
+    holdStartY = e.clientY
+    holdTimer = setTimeout(()=>{
+      holdTimer = null
+      wrapper.dataset.dragging = "1"
+      dragStartY = e.clientY
+      dragCurrentY = e.clientY
+      wrapper.style.zIndex = "3"
+      wrapper.style.opacity = "0.85"
+      suppressOpenForDrag()
+    }, 120)
+  })
+
+  wrapper.addEventListener("pointermove", (e)=>{
+    if(wrapper.dataset.dragging === "1"){
+      dragCurrentY = e.clientY
+      const diffY = dragCurrentY - dragStartY
+      e.preventDefault()
+      wrapper.style.transition = "none"
+      wrapper.style.transform = `translateY(${diffY}px)`
+      return
+    }
+
+    if(!holdTimer) return
+    const movedX = Math.abs(e.clientX - holdStartX)
+    const movedY = Math.abs(e.clientY - holdStartY)
+    if(movedX > 8 || movedY > 8){
+      clearHoldTimer()
+    }
+  })
+
+  wrapper.addEventListener("pointerup", ()=>{
+    clearHoldTimer()
+    if(wrapper.dataset.dragging === "1"){
+      endSauceDrag()
+    }
+  })
+  wrapper.addEventListener("pointercancel", ()=>{
+    clearHoldTimer()
+    if(wrapper.dataset.dragging === "1"){
+      endSauceDrag()
+    }
+  })
+
   const display = document.createElement("div")
   display.dataset.role = "sauce-display"
-  display.style.flex = "1"
-  display.style.padding = "14px"
-  display.style.borderRadius = "14px"
-  display.style.border = "1px solid #e5e5ea"
-  display.style.background = "#f9f9f9"
-  display.style.color = "#8e8e93"
-  display.style.fontSize = "17px"
-  display.style.lineHeight = "1.4"
-  display.style.minHeight = "48px"
-  display.style.display = "flex"
-  display.style.alignItems = "center"
-  display.style.cursor = "pointer"
-  display.textContent = "尚未選擇醬料 · Choose sauce"
+  display.className = "picker-field picker-field-fill picker-field--placeholder picker-draggable"
+  display.textContent = NO_SAUCE_LABEL
   display.onclick = ()=>{
+    if(Date.now() < suppressOpenUntil) return
     openSaucePicker("sauce2")
   }
 
@@ -963,11 +1031,7 @@ function createSauceSelect(){
 removeBtn.onclick = (e)=>{
   e.stopPropagation()
   wrapper.remove()
-
-  // 🔥 顯示按鈕
-  const btn = document.getElementById("sauce2Btn")
-  if(btn) btn.style.display = "inline-block"
-
+  updateSauce2Visibility()
   calc()
 }
 
@@ -984,18 +1048,37 @@ function addSauce2(){
 
   const item = createSauceSelect()
   container.appendChild(item)
-
-  // 🔥 隱藏按鈕
-  const btn = document.getElementById("sauce2Btn")
-  if(btn) btn.style.display = "none"
+  updateSauce2Visibility()
 
   openSaucePicker("sauce2")
+}
+
+function removeSauce1(){
+  const sauce1 = document.getElementById("sauce1")
+  const sauce2List = document.getElementById("sauce2List")
+  if(!sauce1) return
+
+  const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
+  const sauce2Value = sauce2ValueInput ? sauce2ValueInput.value : ""
+
+  // If sauce 2 exists, promote it to sauce 1; otherwise clear sauce 1.
+  if(sauce2Value){
+    sauce1.value = sauce2Value
+  } else {
+    sauce1.value = ""
+  }
+
+  if(sauce2List) sauce2List.innerHTML = ""
+
+  updateSaucePickerLabel("sauce1")
+  calc()
 }
 
 let lastCal = 0;
 let lastProtein = 0;
 let resultEnabled = false;
 let resultMode = "";
+let shouldPopResultOnNextCalc = false;
 
 function animateNumber(el, start, end, decimals=1, duration=300) {
   let startTime = null;
@@ -1012,7 +1095,7 @@ function animateNumber(el, start, end, decimals=1, duration=300) {
 function showResultHint(){
   const resultEl = document.getElementById("result")
   if(resultMode !== "hint"){
-    resultEl.innerHTML = `<div style="font-size:14px;color:#8e8e93;font-weight:500;">請先選擇醬料或不加醬 · Choose sauce or no sauce</div>`
+    resultEl.innerHTML = `<div style="font-size:14px;color:#8e8e93;font-weight:500;">可選擇醬料，或留空不加醬 Sauce is optional</div>`
     resultMode = "hint"
   }
 }
@@ -1034,11 +1117,33 @@ function showResultStats(summaryText, breakdownHtml){
   if(breakdownEl) breakdownEl.innerHTML = breakdownHtml
 }
 
+function triggerResultPop(){
+  const resultEl = document.getElementById("result")
+  if(!resultEl) return
+  resultEl.classList.remove("pop")
+  void resultEl.offsetWidth
+  resultEl.classList.add("pop")
+}
+
 function calc(){
 let total = {cal:0, protein:0}
 let breakdown = []
+const resultEl = document.getElementById("result")
 
 let main = document.getElementById("main").value
+if(!main){
+  resultEnabled = false
+  resultMode = ""
+  lastCal = 0
+  lastProtein = 0
+  if(resultEl){
+    resultEl.classList.remove("active")
+    resultEl.classList.remove("pop")
+    resultEl.style.opacity = "0"
+    resultEl.style.visibility = "hidden"
+  }
+  return
+}
 
 if(main && data.main[main]){
   total.cal += data.main[main].cal
@@ -1072,10 +1177,6 @@ let sauce1 = document.getElementById("sauce1").value
 const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
 let sauce2 = sauce2ValueInput ? sauce2ValueInput.value : ""
 const sauce2Visible = !!sauce2ValueInput
-const noSauceSelected = sauce1 === "__NONE__"
-if(noSauceSelected){
-  sauce1 = ""
-}
 
 if(sauce1 && sauce2Visible && sauce2){
   // both sauces → each half
@@ -1087,8 +1188,6 @@ if(sauce1 && sauce2Visible && sauce2){
   total.cal += data.sauce[sauce1].cal
   breakdown.push(`${sauce1}: ${data.sauce[sauce1].cal} kcal`)
 }
-
-const resultEl = document.getElementById("result")
 
 const selectedSauceCount = (sauce1 ? 1 : 0) + (sauce2 ? 1 : 0)
 const summaryText = `主餐 1 份 + 加料 ${selectedAddonNames.length} 份 + 醬料 ${selectedSauceCount} 種`
@@ -1110,6 +1209,10 @@ lastProtein = total.protein
   resultEl.style.visibility = "visible"
   resultEl.classList.add("active")
   setTimeout(() => resultEl.classList.remove("active"), 600)
+  if(shouldPopResultOnNextCalc){
+    triggerResultPop()
+    shouldPopResultOnNextCalc = false
+  }
   if (navigator.vibrate) navigator.vibrate(5);
   updateResultVisibility()
 }
@@ -1120,12 +1223,14 @@ function updateResultVisibility(){
   const resultEl = document.getElementById("result")
 
   if(!resultEnabled){
-    resultEl.style.opacity = "1"
+    resultEl.style.opacity = "0"
+    resultEl.style.visibility = "hidden"
     resultEl.style.pointerEvents = "none"
     return
   }
 
   resultEl.style.opacity = "1"
+  resultEl.style.visibility = "visible"
   resultEl.style.pointerEvents = "none"
 }
 
@@ -1151,14 +1256,17 @@ function toggleDisclaimer(){
 }
 
 function resetAll(){
-  const main = document.getElementById("main")
-  const firstGroup = Object.keys(mainGroups).find(g => (mainGroups[g] || []).length > 0)
-  if(firstGroup && mainGroups[firstGroup] && mainGroups[firstGroup][0]){
-    main.value = mainGroups[firstGroup][0]
-    mainActiveGroup = firstGroup
-  } else {
-    main.value = ""
+  document.body.classList.add("resetting")
+  setTimeout(()=> document.body.classList.remove("resetting"), 360)
+  const resetBtn = document.querySelector(".reset-btn")
+  if(resetBtn){
+    resetBtn.classList.remove("animating")
+    void resetBtn.offsetWidth
+    resetBtn.classList.add("animating")
   }
+
+  const main = document.getElementById("main")
+  main.value = ""
   updateMainPickerLabel()
 
   document.getElementById("double").checked = false

@@ -1,6 +1,8 @@
 :root {
   --subway-green-light: #00843D;
   --accent-purple: #6a0dad;
+  --ios-green-btn: #2fa84f;
+  --ios-green-on: #f3fff7;
 }
 
 body {
@@ -45,13 +47,35 @@ body {
   transform: translateY(-1px);
 }
 
+.reset-btn {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid #d9d9df;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f4f8 100%);
+  color: #1f2024;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.reset-btn.animating {
+  animation: resetBtnPulse 0.32s cubic-bezier(.22,.61,.36,1);
+}
+
+.double-meat-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
 .card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 28px;
   padding: 20px 18px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-  border: 1px solid #eee;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border: 1px solid #ededf1;
   position: relative;
   z-index: 0;
   transition: 0.15s ease;
@@ -112,14 +136,62 @@ button:active {
 
 select:focus {
   outline: none;
-  border-color: #34c759;
-  box-shadow: 0 0 0 2px rgba(52,199,89,0.2);
+  border-color: var(--ios-green-btn);
+  box-shadow: 0 0 0 2px rgba(47,168,79,0.22);
 }
 
 select:focus-visible {
-  box-shadow: 0 0 0 2px rgba(52,199,89,0.2);
+  box-shadow: 0 0 0 2px rgba(47,168,79,0.22);
 }
 
+.picker-field {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #e5e5ea;
+  background: #f9f9f9;
+  color: #000;
+  font-size: 17px;
+  line-height: 1.4;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.picker-field-fill {
+  flex: 1;
+}
+
+.picker-field--placeholder {
+  color: #8e8e93;
+}
+
+.picker-draggable {
+  position: relative;
+  padding-right: 44px;
+  user-select: none;
+}
+
+.picker-draggable::after {
+  content: "≡";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: #8e8e93;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+#addonList .addon-row .picker-field {
+  margin-top: 12px;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+}
 
 .result {
   position: fixed;
@@ -129,7 +201,7 @@ select:focus-visible {
   z-index: 9999;
   background: #ffffff;
   padding: 18px;
-  border-radius: 24px;
+  border-radius: 28px;
   font-size: 18px;
   font-weight: 600;
   box-shadow: 0 -6px 20px rgba(0,0,0,0.12);
@@ -149,6 +221,25 @@ select:focus-visible {
   transform: none;
   opacity: 1;
 }
+
+.result.pop {
+  animation: resultPopIn 0.34s cubic-bezier(.22,.61,.36,1);
+}
+
+@keyframes resultPopIn {
+  0% {
+    transform: translateY(14px) scale(0.97);
+    opacity: 0.45;
+  }
+  65% {
+    transform: translateY(-3px) scale(1.01);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
 button {
   -webkit-tap-highlight-color: transparent;
 }
@@ -166,48 +257,78 @@ button:active {
   font-size: 20px;
   color: var(--subway-green-light);
 }
+
+body.resetting .card {
+  animation: resetCardBounce 0.34s cubic-bezier(.22,.61,.36,1);
+}
+
+@keyframes resetCardBounce {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  45% { transform: translateY(6px) scale(0.992); opacity: 0.88; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes resetBtnPulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
 /* iOS style switch */
 input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 44px;
-  height: 26px;
-  background: #e5e5ea;
+  width: 60px;
+  height: 34px;
+  background: #cfd1d7;
+  border: 1px solid rgba(0,0,0,0.06);
   border-radius: 999px;
   position: relative;
   outline: none;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.35);
 }
 
 input[type="checkbox"]::after {
   content: "";
   position: absolute;
-  width: 22px;
-  height: 22px;
+  width: 36px;
+  height: 26px;
   background: #fff;
-  border-radius: 50%;
-  top: 2px;
+  border-radius: 999px;
+  top: 3px;
   left: 2px;
-  transition: transform 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: transform 0.24s cubic-bezier(.22,.61,.36,1), box-shadow 0.24s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.22);
 }
 
 input[type="checkbox"]:checked {
-  background: #34c759;
+  background: var(--ios-green-btn);
+  animation: toggleTrackPop 0.22s cubic-bezier(.22,.61,.36,1);
 }
 
 input[type="checkbox"]:checked::after {
-  transform: translateX(18px);
+  transform: translateX(22px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.26);
 }
 
 input[type="checkbox"]:active::after {
-  transform: scale(1.05);
+  transform: scale(1.04);
+}
+
+input[type="checkbox"]:active {
+  transform: scale(0.985);
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toggleTrackPop {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.03); }
+  100% { transform: scale(1); }
 }
 #addonList .addon-row {
   animation: fadeIn 0.2s ease;
@@ -236,30 +357,33 @@ input[type="checkbox"]:active::after {
 
 @media (prefers-color-scheme: dark) {
   body {
-    background: #000;
+    background: #111214;
     color: #fff;
   }
 
   .card {
-    background: #1c1c1e;
-    border: 1px solid #2c2c2e;
-    box-shadow: none;
+    background: linear-gradient(180deg, #1d1f25 0%, #181a20 100%);
+    border: 1px solid #2b2e36;
+    border-radius: 28px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.32);
   }
 
   select {
-    background: #2c2c2e;
+    background: #242730;
     color: #fff;
-    border: 1px solid #3a3a3c;
+    border: 1px solid #353a45;
   }
 
   select:hover {
-    background: #3a3a3c;
+    background: #2c303a;
   }
 
   .result {
-    background: #1c1c1e;
-    border: 1px solid #2c2c2e;
+    background: linear-gradient(180deg, #1d1f25 0%, #181a20 100%);
+    border: 1px solid #2b2e36;
+    border-radius: 28px;
     color: #fff;
+    box-shadow: 0 -10px 28px rgba(0,0,0,0.35);
   }
 
   label {
@@ -270,22 +394,72 @@ input[type="checkbox"]:active::after {
     color: #aaa;
   }
 
+  .reset-btn {
+    background: linear-gradient(180deg, #3a3d46 0%, #30333b 100%);
+    color: #f2f2f7;
+    border-color: #4a4e58;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+  }
+
+  .double-meat-label {
+    color: #b8bbc3;
+  }
+
+  input[type="checkbox"] {
+    background: #5a5d66;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.06);
+  }
+
+  input[type="checkbox"]::after {
+    background: #fff;
+  }
+
   #mainModal > div,
   #addonModal > div,
   #sauceModal > div {
-    background: #1c1c1e !important;
+    background: linear-gradient(180deg, #1f2129 0%, #181a20 100%) !important;
     color: #f2f2f7 !important;
+    box-shadow: 0 -10px 32px rgba(0,0,0,0.45);
+    border-top-left-radius: 28px !important;
+    border-top-right-radius: 28px !important;
   }
 
   #mainCategoriesWrapper,
   #addonCategoriesWrapper {
-    background: #1c1c1e !important;
+    background: transparent !important;
   }
 
   #mainItems > div,
   #addonItems > div,
   #sauceItems > div {
-    border-bottom: 1px solid #2c2c2e !important;
+    border-bottom: 1px solid #2b2f39 !important;
+  }
+
+  .picker-field {
+    background: #242730 !important;
+    color: #f2f2f7 !important;
+    border-color: #353a45 !important;
+  }
+
+  .picker-field--placeholder {
+    color: #9aa0ad !important;
+  }
+
+  .picker-draggable::after {
+    color: #9aa0ad;
+  }
+
+  #mainPicker:not(.picker-field--placeholder) {
+    color: #ffffff !important;
+  }
+
+  #addonList [data-role="drag-addon"],
+  #addonList [data-role="remove-addon"],
+  #sauce1RemoveBtn,
+  #sauce2List button {
+    background: #3a3f4a !important;
+    color: #f2f2f7 !important;
   }
 
 }
