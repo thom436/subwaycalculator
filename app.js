@@ -303,7 +303,7 @@ function closeOtherSwipeRows(exceptRow = null){
   })
 }
 
-function attachSwipeToReveal(row, onSwipeDelete){
+function attachSwipeToReveal(row, onSwipeDelete, canSwipe){
   if(!row || row.dataset.swipeReady === "1") return
   row.dataset.swipeReady = "1"
 
@@ -318,6 +318,10 @@ function attachSwipeToReveal(row, onSwipeDelete){
   const revealWidth = 52
 
   row.addEventListener("touchstart", (e)=>{
+    if(typeof canSwipe === "function" && !canSwipe()){
+      closeSwipeRow(row)
+      return
+    }
     startX = e.touches[0].clientX
     startY = e.touches[0].clientY
     currentX = startX
@@ -326,6 +330,10 @@ function attachSwipeToReveal(row, onSwipeDelete){
   }, { passive: true })
 
   row.addEventListener("touchmove", (e)=>{
+    if(typeof canSwipe === "function" && !canSwipe()){
+      closeSwipeRow(row)
+      return
+    }
     currentX = e.touches[0].clientX
     const currentY = e.touches[0].clientY
     const diffX = currentX - startX
@@ -951,6 +959,7 @@ function updateSauce2Visibility(){
   if(!sauce1Value){
     list.innerHTML = ""
     emptyPicker.style.display = "none"
+    closeSwipeRow(document.getElementById("sauce1Row"))
     const sauceSwipeHint = document.getElementById("sauceSwipeHint")
     if(sauceSwipeHint) sauceSwipeHint.style.display = "none"
     return
@@ -970,6 +979,7 @@ function updateSauce2Visibility(){
 
 function updateSaucePickerLabel(target = "sauce1"){
   if(target === "sauce1"){
+    const row = document.getElementById("sauce1Row")
     const picker = document.getElementById("sauce1Picker")
     const value = document.getElementById("sauce1").value
     const removeBtn = document.getElementById("sauce1RemoveBtn")
@@ -981,6 +991,7 @@ function updateSaucePickerLabel(target = "sauce1"){
     if(removeBtn){
       removeBtn.style.display = value ? "flex" : "none"
     }
+    if(!value) closeSwipeRow(row)
     updateSauce2Visibility()
     return
   }
@@ -1174,7 +1185,7 @@ removeBtn.onclick = (e)=>{
       updateSauce2Visibility()
       calc()
     })
-  })
+  }, ()=> !!hiddenValue.value)
 
   return wrapper
 }
@@ -1473,7 +1484,7 @@ lastMainForFeedback = main
 init()
 attachSwipeToReveal(document.getElementById("sauce1Row"), ()=>{
   removeSauce1()
-})
+}, ()=> !!document.getElementById("sauce1").value)
 
 function updateResultVisibility(){
   const resultEl = document.getElementById("result")
