@@ -145,6 +145,10 @@ function formatProtein(value){
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
 }
 
+function compactZhShareName(name){
+  return String(name || "").replace(/[（(]([^()（）]+)[)）]/g, "$1")
+}
+
 function styleModalCategoryButton(btn, active){
   const dark = isDarkMode()
   btn.style.padding = "8px 12px"
@@ -1018,22 +1022,26 @@ if(sauce1) sauceShareText.push(getSauceDisplayText(sauce1))
 if(sauce2) sauceShareText.push(getSauceDisplayText(sauce2))
 if(!sauceShareText.length) sauceShareText.push("不加醬 No sauce")
 
-const addonShareText = selectedAddonNames.length
-  ? selectedAddonNames.map(name => {
-      const en = addonNameMap[name] || ""
-      return en ? `${name} ${en}` : name
-    }).join("、")
-  : "無 None"
+const isDoubleMeat = document.getElementById("double").checked
+const zhMainBase = `6吋${main}${isDoubleMeat ? "雙份肉" : ""}`
+const zhAddon = selectedAddonNames.map(compactZhShareName).join("+")
+const zhMainWithAddon = zhAddon ? `${zhMainBase}+${zhAddon}` : zhMainBase
+const zhSauce = sauce1
+  ? [sauce1, sauce2].filter(Boolean).join("+")
+  : "不加醬"
 
-const mainEn = mainNameMap[main] || ""
-const mainText = mainEn ? `${main} ${mainEn}` : main
-const doubleText = document.getElementById("double").checked ? "是 Yes" : "否 No"
+const mainEn = mainNameMap[main] || main
+const enAddon = selectedAddonNames
+  .map(name => addonNameMap[name] || name)
+  .join(" + ")
+const enMainWithAddon = `${`6" ${mainEn}`}${isDoubleMeat ? " double meat" : ""}${enAddon ? ` + ${enAddon}` : ""}`
+const enSauce = sauce1
+  ? [sauce1, sauce2].filter(Boolean).map(name => sauceNameMap[name] || name).join(" + ")
+  : "No sauce"
+
 lastShareText =
-`🔥 ${formatKcal(total.cal)} kcal / 💪 ${formatProtein(total.protein)} g protein
-主餐 Main: ${mainText}
-雙份肉 Double meat: ${doubleText}
-加料 Add-ons: ${addonShareText}
-醬料 Sauce: ${sauceShareText.join(" + ")}`
+`${formatKcal(total.cal)} kcal / ${formatProtein(total.protein)} g ${zhMainWithAddon} ${zhSauce}
+${formatKcal(total.cal)} kcal / ${formatProtein(total.protein)} g ${enMainWithAddon} ${enSauce}`
 
 const calEl = document.getElementById("calVal")
 const proEl = document.getElementById("proVal")
