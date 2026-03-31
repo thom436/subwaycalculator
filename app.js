@@ -110,7 +110,7 @@ const sauceNameMap = {
 const NO_SAUCE_LABEL = "不加醬 No sauce"
 let lastShareText = ""
 let copyShareResetTimer = null
-const RECENT_LIMIT = 3
+const RECENT_LIMIT = 2
 const RECENT_KEYS = {
   main: "recent_main",
   addon: "recent_addon",
@@ -186,10 +186,10 @@ function saveRecentItem(type, item){
 }
 
 function appendRecentLabel(container){
-  const label = document.createElement("div")
-  label.textContent = "最近使用 Recent"
-  label.className = "modal-section-label"
-  container.appendChild(label)
+  const hint = document.createElement("div")
+  hint.className = "modal-recent-hint"
+  hint.innerHTML = `<span class="modal-recent-dot">●</span> 最近使用 / Last used`
+  container.appendChild(hint)
 }
 
 function appendSectionDivider(container){
@@ -298,7 +298,7 @@ function renderMainItems(group){
   const currentGroupItems = new Set((mainGroups[group] || []).filter(name => !!data.main[name]))
   const recentMainNames = getRecentItems("main", currentGroupItems)
 
-  const renderMainItem = (name)=>{
+  const renderMainItem = (name, isRecent = false)=>{
     if(!data.main[name]) return;
 
     const div = document.createElement("div")
@@ -311,6 +311,7 @@ function renderMainItems(group){
 
     const en = mainNameMap[name] || ""
     const textWrap = document.createElement("div")
+    textWrap.className = "modal-item-title"
     textWrap.textContent = en ? `${name} ${en}` : name
     textWrap.style.paddingRight = "10px"
 
@@ -327,6 +328,12 @@ function renderMainItems(group){
     rightWrap.style.display = "flex"
     rightWrap.style.alignItems = "center"
     rightWrap.style.gap = "8px"
+    if(isRecent){
+      const recentChip = document.createElement("span")
+      recentChip.className = "modal-recent-dot"
+      recentChip.textContent = "●"
+      rightWrap.appendChild(recentChip)
+    }
     rightWrap.appendChild(meta)
 
     if(name === selectedMain){
@@ -339,7 +346,14 @@ function renderMainItems(group){
     div.appendChild(textWrap)
     div.appendChild(rightWrap)
 
+    const isCurrentSelected = name === selectedMain
+    if(isCurrentSelected){
+      div.style.opacity = "0.45"
+      div.style.cursor = "not-allowed"
+    }
+
     div.onclick = ()=>{
+      if(isCurrentSelected) return
       const mainSelect = document.getElementById("main")
       mainSelect.value = name
       saveRecentItem("main", name)
@@ -352,17 +366,15 @@ function renderMainItems(group){
     itemsEl.appendChild(div)
   }
 
-  const restNames = sortedNames.filter(name => !recentMainNames.includes(name))
+  const recentSet = new Set(recentMainNames)
+  const restNames = sortedNames.filter(name => !recentSet.has(name))
   const hasRecent = recentMainNames.length > 0
   if(hasRecent){
     appendRecentLabel(itemsEl)
-    recentMainNames.forEach(renderMainItem)
-    if(restNames.length){
-      appendSectionDivider(itemsEl)
-    }
+    recentMainNames.forEach(name => renderMainItem(name, true))
   }
 
-  restNames.forEach(renderMainItem)
+  restNames.forEach(name => renderMainItem(name, false))
 }
 
 const addonNameMap = {
@@ -466,7 +478,7 @@ function renderAddonItems(group){
   const itemsEl = document.getElementById("addonItems")
   const searchEl = document.getElementById("addonSearch")
   itemsEl.innerHTML = ""
-  const selected = new Set(getSelectedAddonValues(addonPickerTargetHidden))
+  const selected = new Set(getSelectedAddonValues())
   const editingCurrentValue = addonPickerTargetHidden ? addonPickerTargetHidden.value : ""
   const query = searchEl ? searchEl.value.trim().toLowerCase() : ""
   const currentGroupItems = new Set((addonGroups[group] || []).filter(name => !!data.addon[name]))
@@ -486,7 +498,8 @@ function renderAddonItems(group){
     })
     .sort((a,b)=> data.addon[b].cal - data.addon[a].cal)
 
-  const groupNamesWithoutRecent = sortedAddonNames.filter(name => !recentAddonNames.includes(name))
+  const recentSet = new Set(recentAddonNames)
+  const groupNamesWithoutRecent = sortedAddonNames.filter(name => !recentSet.has(name))
 
   if(!recentAddonNames.length && !groupNamesWithoutRecent.length){
     const empty = document.createElement("div")
@@ -498,7 +511,7 @@ function renderAddonItems(group){
     return
   }
 
-  const renderAddonItem = (name)=>{
+  const renderAddonItem = (name, isRecent = false)=>{
     if(!data.addon[name]) return;
 
     const div = document.createElement("div")
@@ -511,6 +524,7 @@ function renderAddonItems(group){
 
     const en = addonNameMap[name] || ""
     const textWrap = document.createElement("div")
+    textWrap.className = "modal-item-title"
     textWrap.textContent = en ? `${name} ${en}` : name
     textWrap.style.paddingRight = "10px"
 
@@ -523,6 +537,12 @@ function renderAddonItems(group){
     rightWrap.style.display = "flex"
     rightWrap.style.alignItems = "center"
     rightWrap.style.gap = "8px"
+    if(isRecent){
+      const recentChip = document.createElement("span")
+      recentChip.className = "modal-recent-dot"
+      recentChip.textContent = "●"
+      rightWrap.appendChild(recentChip)
+    }
     rightWrap.appendChild(meta)
 
     div.appendChild(textWrap)
@@ -535,15 +555,13 @@ function renderAddonItems(group){
       rightWrap.appendChild(check)
     }
     div.appendChild(rightWrap)
-    if(alreadySelected){
+    if(alreadySelected || isCurrentEditingValue){
       div.style.opacity = "0.45"
       div.style.cursor = "not-allowed"
-    } else if(isCurrentEditingValue){
-      div.style.background = getSelectionHighlightColor()
     }
 
     div.onclick = ()=>{
-      if(alreadySelected) return
+      if(alreadySelected || isCurrentEditingValue) return
       if(addonPickerTargetRow){
         setAddonValue(addonPickerTargetRow, name)
         saveRecentItem("addon", name)
@@ -561,13 +579,10 @@ function renderAddonItems(group){
 
   if(recentAddonNames.length){
     appendRecentLabel(itemsEl)
-    recentAddonNames.forEach(renderAddonItem)
-    if(groupNamesWithoutRecent.length){
-      appendSectionDivider(itemsEl)
-    }
+    recentAddonNames.forEach(name => renderAddonItem(name, true))
   }
 
-  groupNamesWithoutRecent.forEach(renderAddonItem)
+  groupNamesWithoutRecent.forEach(name => renderAddonItem(name, false))
 }
 
 function init(){
@@ -851,9 +866,10 @@ function openSaucePicker(target = "sauce1"){
     .sort((a,b)=> data.sauce[b].cal - data.sauce[a].cal)
   const recentSauceNames = getRecentItems("sauce", sortedSauceNames)
     .filter(name => !isBlocked(name))
-  const restSauceNames = sortedSauceNames.filter(name => !recentSauceNames.includes(name))
+  const recentSet = new Set(recentSauceNames)
+  const restSauceNames = sortedSauceNames.filter(name => !recentSet.has(name))
 
-  const renderSauceItem = (name)=>{
+  const renderSauceItem = (name, isRecent = false)=>{
     const div = document.createElement("div")
     div.style.padding = "12px"
     div.style.borderBottom = "1px solid #eee"
@@ -863,6 +879,7 @@ function openSaucePicker(target = "sauce1"){
     div.style.alignItems = "center"
     const en = sauceNameMap[name] || ""
     const textWrap = document.createElement("div")
+    textWrap.className = "modal-item-title"
     textWrap.textContent = en ? `${name} ${en}` : name
     textWrap.style.paddingRight = "10px"
     const meta = document.createElement("div")
@@ -870,8 +887,19 @@ function openSaucePicker(target = "sauce1"){
     meta.style.fontSize = "12px"
     meta.style.color = "#8e8e93"
     meta.style.whiteSpace = "nowrap"
+    const rightWrap = document.createElement("div")
+    rightWrap.style.display = "flex"
+    rightWrap.style.alignItems = "center"
+    rightWrap.style.gap = "8px"
+    if(isRecent){
+      const recentChip = document.createElement("span")
+      recentChip.className = "modal-recent-dot"
+      recentChip.textContent = "●"
+      rightWrap.appendChild(recentChip)
+    }
+    rightWrap.appendChild(meta)
     div.appendChild(textWrap)
-    div.appendChild(meta)
+    div.appendChild(rightWrap)
 
     if(isBlocked(name)){
       div.style.opacity = "0.45"
@@ -900,13 +928,10 @@ function openSaucePicker(target = "sauce1"){
 
   if(recentSauceNames.length){
     appendRecentLabel(itemsEl)
-    recentSauceNames.forEach(renderSauceItem)
-    if(restSauceNames.length){
-      appendSectionDivider(itemsEl)
-    }
+    recentSauceNames.forEach(name => renderSauceItem(name, true))
   }
 
-  restSauceNames.forEach(renderSauceItem)
+  restSauceNames.forEach(name => renderSauceItem(name, false))
 
   modal.onclick = (e)=>{
     if(e.target.id === "sauceModal") modal.style.display = "none"
