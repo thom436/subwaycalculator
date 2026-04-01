@@ -495,7 +495,7 @@ function removeMain(){
 }
 
 function openMainPicker(defaultGroup = ""){
-  if(isPickerTapSuppressed()) return
+  if(runAfterTapSuppression(()=> openMainPicker(defaultGroup))) return
   const modal = document.getElementById("mainModal")
   const catEl = document.getElementById("mainModalCategories")
   const itemsEl = document.getElementById("mainItems")
