@@ -299,6 +299,14 @@ function animatePickerAppear(el){
   setTimeout(()=> el.classList.remove("picker-soft-appear"), 260)
 }
 
+function animateRowEnter(el){
+  if(!el) return
+  el.classList.remove("row-enter")
+  void el.offsetWidth
+  el.classList.add("row-enter")
+  setTimeout(()=> el.classList.remove("row-enter"), 300)
+}
+
 function styleModalCategoryButton(btn, active){
   const dark = isDarkMode()
   btn.style.padding = "8px 12px"
@@ -323,12 +331,13 @@ function removeRowWithAnimation(row, onDone){
     return
   }
 
+  closeSwipeRow(row)
   row.classList.add("removing")
 
   setTimeout(()=>{
     row.remove()
     if(onDone) onDone()
-  }, 180)
+  }, 220)
 }
 
 function closeOtherSwipeRows(exceptRow = null){
@@ -463,10 +472,26 @@ function updateMainPickerLabel(){
 
 function removeMain(){
   const mainSelect = document.getElementById("main")
+  const mainRow = document.getElementById("mainPickerRow")
+  const mainDisplay = mainRow ? mainRow.querySelector(".picker-field") : null
   if(!mainSelect) return
-  mainSelect.value = ""
-  updateMainPickerLabel()
-  calc()
+
+  const applyRemove = ()=>{
+    mainSelect.value = ""
+    updateMainPickerLabel()
+    calc()
+  }
+
+  if(mainDisplay){
+    mainDisplay.classList.add("main-removing")
+    setTimeout(()=>{
+      mainDisplay.classList.remove("main-removing")
+      applyRemove()
+    }, 170)
+    return
+  }
+
+  applyRemove()
 }
 
 function openMainPicker(defaultGroup = ""){
@@ -1156,6 +1181,7 @@ function addAddon(defaultValue = ""){
   setAddonValue(wrapper, defaultValue)
 
   container.appendChild(wrapper)
+  animateRowEnter(wrapper)
   flashPickerSelection(wrapper.querySelector(".picker-field"))
   updateAddonUI()
   calc()
@@ -1456,6 +1482,7 @@ function addSauce2Internal(){
 
   const item = createSauceSelect()
   container.appendChild(item)
+  animateRowEnter(item)
   updateSauce2Visibility()
 
   openSaucePicker("sauce2")
@@ -1469,22 +1496,40 @@ function addSauce2(){
 function removeSauce1(){
   const sauce1 = document.getElementById("sauce1")
   const sauce2List = document.getElementById("sauce2List")
+  const sauce1Row = document.getElementById("sauce1Row")
+  const sauce1Display = sauce1Row ? sauce1Row.querySelector(".picker-field") : null
   if(!sauce1) return
 
-  const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
-  const sauce2Value = sauce2ValueInput ? sauce2ValueInput.value : ""
+  const applyRemove = ()=>{
+    const sauce2ValueInput = document.querySelector('#sauce2List input[data-role="sauce-value"]')
+    const sauce2Value = sauce2ValueInput ? sauce2ValueInput.value : ""
 
-  // If sauce 2 exists, promote it to sauce 1; otherwise clear sauce 1.
-  if(sauce2Value){
-    sauce1.value = sauce2Value
-  } else {
-    sauce1.value = ""
+    // If sauce 2 exists, promote it to sauce 1; otherwise clear sauce 1.
+    if(sauce2Value){
+      sauce1.value = sauce2Value
+    } else {
+      sauce1.value = ""
+    }
+
+    if(sauce2List) sauce2List.innerHTML = ""
+
+    updateSaucePickerLabel("sauce1")
+    if(sauce2Value && sauce1Row){
+      animateRowEnter(sauce1Row)
+    }
+    calc()
   }
 
-  if(sauce2List) sauce2List.innerHTML = ""
+  if(sauce1Display){
+    sauce1Display.classList.add("sauce-main-removing")
+    setTimeout(()=>{
+      sauce1Display.classList.remove("sauce-main-removing")
+      applyRemove()
+    }, 170)
+    return
+  }
 
-  updateSaucePickerLabel("sauce1")
-  calc()
+  applyRemove()
 }
 
 let lastCal = 0;

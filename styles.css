@@ -56,6 +56,15 @@ body {
   transform: translateY(-1px);
 }
 
+.top-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: -22px;
+  margin-bottom: 16px;
+}
+
 .icon-symbol-btn {
   border: none;
   background: transparent;
@@ -381,6 +390,10 @@ select:focus-visible {
   animation: pickerSoftAppear 0.24s cubic-bezier(.22,.61,.36,1);
 }
 
+.picker-row-with-minus.row-enter {
+  animation: rowEnterPop 0.28s cubic-bezier(.2,.7,.2,1);
+}
+
 @keyframes pickerSelectFlash {
   0% {
     transform: scale(1);
@@ -407,21 +420,64 @@ select:focus-visible {
   }
 }
 
+@keyframes rowEnterPop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.986);
+    filter: saturate(0.96);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.003);
+    filter: saturate(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: none;
+  }
+}
+
 .picker-row-with-minus.removing {
   pointer-events: none;
-  opacity: 0;
-  transform: translateX(-12px) scale(0.99);
-  transition: transform 0.18s ease, opacity 0.16s ease;
+  animation: rowDeleteOut 0.22s cubic-bezier(.22,.61,.36,1) forwards;
 }
 
 .picker-row-with-minus.removing .picker-field {
-  opacity: 0.88;
-  transition: opacity 0.16s ease;
+  opacity: 0.9;
 }
 
 .picker-row-with-minus.removing .minus-btn {
   opacity: 0;
-  transition: opacity 0.14s ease;
+  transition: opacity 0.12s ease;
+}
+
+/* First sauce row clear animation (without removing DOM node) */
+.picker-field.main-removing,
+.picker-field.sauce-main-removing {
+  animation: sauceMainClearOut 0.18s cubic-bezier(.22,.61,.36,1);
+}
+
+@keyframes sauceMainClearOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0.56;
+    transform: translateX(-10px) scale(0.992);
+  }
+}
+
+@keyframes rowDeleteOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-16px) scale(0.985);
+  }
 }
 
 #addonList .addon-row .picker-field {
@@ -582,7 +638,9 @@ button:active {
   position: relative;
   width: 16px;
   height: 16px;
-  display: inline-block;
+  display: block;
+  margin: 0 auto;
+  transform: translateY(-0.5px);
 }
 
 .copy-rounded-icon::before,
@@ -596,13 +654,13 @@ button:active {
 }
 
 .copy-rounded-icon::before {
-  left: 1px;
+  left: 1.5px;
   top: 4px;
   opacity: 0.88;
 }
 
 .copy-rounded-icon::after {
-  left: 5px;
+  left: 5.5px;
   top: 1px;
 }
 
@@ -766,18 +824,10 @@ input[type="checkbox"]:active {
   transform: scale(0.985);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes toggleTrackPop {
   0% { transform: scale(1); }
   55% { transform: scale(1.03); }
   100% { transform: scale(1); }
-}
-#addonList .addon-row {
-  animation: fadeIn 0.2s ease;
 }
 
 #sauce2Container {
