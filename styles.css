@@ -301,7 +301,7 @@ select:focus-visible {
   border: 1px solid rgba(174,189,214,0.74);
   background: linear-gradient(180deg, rgba(255,255,255,0.74) 0%, rgba(233,240,250,0.58) 100%);
   color: #1b2230;
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   backdrop-filter: blur(12px) saturate(130%);
   -webkit-backdrop-filter: blur(12px) saturate(130%);
