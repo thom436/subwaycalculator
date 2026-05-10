@@ -107,6 +107,15 @@ const sauceNameMap = {
   "墨西哥辣椒起司醬":"Jalapeno Cheese Sauce"
 }
 
+// 主餐名稱與加料表 key 不同時的對應（用於雙份肉計算）
+const doubleMeatMap = {
+  "燒烤牛肉": "燒烤牛肉(3片/59g)",
+  "嫩切雞肉": "嫩切雞肉(3片)",
+  "火腿":     "火腿(4片)",
+  "蛋沙拉":   "蛋沙拉(2球)",
+  "鷹嘴豆泥餅": "鷹嘴豆泥餅(3顆)",
+}
+
 const NO_SAUCE_LABEL = "不加醬 No sauce"
 let lastShareText = ""
 let copyShareResetTimer = null
@@ -2025,10 +2034,12 @@ if(main && data.main[main]){
 }
 
 if(document.getElementById("double").checked && main){
-  if(data.addon[main]){
-    total.cal += data.addon[main].cal
-    total.protein += data.addon[main].protein
-    breakdown.push(`雙份肉 ${main}: ${data.addon[main].cal} kcal`)
+  const doubleMeatKey = doubleMeatMap[main] || main
+  const doubleMeatData = data.addon[doubleMeatKey]
+  if(doubleMeatData){
+    total.cal += doubleMeatData.cal
+    total.protein += doubleMeatData.protein
+    breakdown.push(`雙份肉 ${main}: ${doubleMeatData.cal} kcal`)
   }
 }
 
