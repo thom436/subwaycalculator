@@ -2168,82 +2168,88 @@ function attachSwipeToDismiss(panel, closeFn) {
 
   const grabberWrap = panel.querySelector(".sheet-grabber-wrap")
   const itemsEl = panel.querySelector(".modal-items")
-
-  let startY = 0, currentY = 0, startTime = 0
-  let isDragging = false, isActive = false
   const THRESHOLD = 88, VELOCITY = 0.42
 
-  const begin = (clientY) => {
-    startY = clientY
-    currentY = clientY
-    startTime = Date.now()
-    isDragging = false
-    isActive = true
+  // Each drag sequence is fully self-contained — touchmove/touchend are
+  // captured on document so iOS cannot intercept them mid-gesture.
+  function startDrag(startClientY) {
+    let currentY = startClientY
+    let startTime = Date.now()
+    let isDragging = false
+
     panel.style.transition = "none"
-  }
 
-  const move = (clientY) => {
-    if (!isActive) return
-    currentY = clientY
-    const dy = currentY - startY
-    if (!isDragging) {
-      if (dy > 6) isDragging = true
-      else if (dy < -4) { isActive = false; return }
-      else return
+    function onMove(e) {
+      currentY = e.touches[0].clientY
+      const dy = currentY - startClientY
+      if (!isDragging) {
+        if (dy > 6)       isDragging = true
+        else if (dy < -4) { finish(); return }
+        else              return
+      }
+      if (isDragging) e.preventDefault()
+      panel.style.transform = `translateY(${Math.max(0, dy)}px)`
     }
-    panel.style.transform = `translateY(${Math.max(0, dy)}px)`
-  }
 
-  const end = () => {
-    if (!isActive) return
-    isActive = false
-    if (!isDragging) { panel.style.transform = ""; return }
-    const dy = currentY - startY
-    const vel = dy / Math.max(1, Date.now() - startTime)
-    panel.style.transition = "transform 0.26s cubic-bezier(.22,.61,.36,1)"
-    if (dy > THRESHOLD || vel > VELOCITY) {
-      panel.style.transform = "translateY(110%)"
-      setTimeout(() => { panel.style.transform = ""; panel.style.transition = ""; closeFn() }, 260)
-    } else {
-      panel.style.transform = ""
-      setTimeout(() => { panel.style.transition = "" }, 260)
+    function finish() {
+      document.removeEventListener("touchmove", onMove)
+      document.removeEventListener("touchend",  finish)
+      document.removeEventListener("touchcancel", finish)
+      const dy  = currentY - startClientY
+      const vel = dy / Math.max(1, Date.now() - startTime)
+      panel.style.transition = "transform 0.26s cubic-bezier(.22,.61,.36,1)"
+      if (isDragging && (dy > THRESHOLD || vel > VELOCITY)) {
+        panel.style.transform = "translateY(110%)"
+        setTimeout(() => { panel.style.transform = ""; panel.style.transition = ""; closeFn() }, 260)
+      } else {
+        panel.style.transform = ""
+        setTimeout(() => { panel.style.transition = "" }, 260)
+      }
     }
+
+    document.addEventListener("touchmove",   onMove,  { passive: false })
+    document.addEventListener("touchend",    finish)
+    document.addEventListener("touchcancel", finish)
   }
 
-  const cancel = () => { isActive = false; panel.style.transform = ""; panel.style.transition = "" }
-
-  // ── Grabber wrap: touch (passive:false so we can preventDefault) ──
+  // ── Grabber: passive:false so e.preventDefault() is allowed ──
   if (grabberWrap) {
     grabberWrap.addEventListener("touchstart", (e) => {
-      e.preventDefault()   // stops iOS from hijacking
-      begin(e.touches[0].clientY)
+      e.preventDefault()
+      startDrag(e.touches[0].clientY)
     }, { passive: false })
 
+    // Desktop mouse drag
     grabberWrap.addEventListener("mousedown", (e) => {
       e.preventDefault()
-      begin(e.clientY)
-      const mm = (ev) => move(ev.clientY)
-      const mu = () => { end(); document.removeEventListener("mousemove", mm); document.removeEventListener("mouseup", mu) }
+      const sy = e.clientY
+      let cy = e.clientY
+      panel.style.transition = "none"
+      const mm = (ev) => { cy = ev.clientY; const dy = cy - sy; if (dy > 0) panel.style.transform = `translateY(${dy}px)` }
+      const mu = () => {
+        document.removeEventListener("mousemove", mm)
+        document.removeEventListener("mouseup",   mu)
+        const dy = cy - sy
+        panel.style.transition = "transform 0.26s cubic-bezier(.22,.61,.36,1)"
+        if (dy > THRESHOLD) {
+          panel.style.transform = "translateY(110%)"
+          setTimeout(() => { panel.style.transform = ""; panel.style.transition = ""; closeFn() }, 260)
+        } else {
+          panel.style.transform = ""
+          setTimeout(() => { panel.style.transition = "" }, 260)
+        }
+      }
       document.addEventListener("mousemove", mm)
-      document.addEventListener("mouseup", mu)
+      document.addEventListener("mouseup",   mu)
     })
   }
 
-  // ── Items area: only when scrolled to top ──
+  // ── Items area: trigger when already scrolled to top ──
   if (itemsEl) {
     itemsEl.addEventListener("touchstart", (e) => {
-      if (itemsEl.scrollTop === 0) begin(e.touches[0].clientY)
+      if (itemsEl.scrollTop === 0) startDrag(e.touches[0].clientY)
     }, { passive: true })
   }
-
-  // ── Global move / end on panel ──
-  panel.addEventListener("touchmove", (e) => {
-    if (!isActive) return
-    move(e.touches[0].clientY)
-    if (isDragging) e.preventDefault()
-  }, { passive: false })
-  panel.addEventListener("touchend", end)
-  panel.addEventListener("touchcancel", cancel)
 }
 
 function initSwipeToDismiss() {
